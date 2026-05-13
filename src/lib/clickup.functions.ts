@@ -9,10 +9,33 @@ import {
   VIVIA_RIU_DEFAULT_LIST_ID,
 } from "./clickup.server";
 
+// Public-tolerant: returns { connected: false } when the caller has no auth,
+// so the client can render a "Connect" affordance without a thrown 401 Response
+// blanking the screen via TanStack's RPC error path.
 export const getClickUpConnection = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    return getConnectionStatus(context.userId, context.supabase);
+  .handler(async () => {
+    try {
+      const { getRequest } = await import("@tanstack/react-start/server");
+      const { createClient } = await import("@supabase/supabase-js");
+      const req = getRequest();
+      const authHeader = req?.headers?.get("authorization");
+      if (!authHeader?.startsWith("Bearer ")) return { connected: false };
+      const token = authHeader.slice(7);
+      const url = process.env.SUPABASE_URL;
+      const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+      if (!url || !key || !token) return { connected: false };
+      const supabase = createClient(url, key, {
+        global: { headers: { Authorization: `Bearer ${token}` } },
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+      const { data: claims } = await supabase.auth.getClaims(token);
+      const sub = claims?.claims?.sub;
+      if (!sub) return { connected: false };
+      return await getConnectionStatus(sub, supabase);
+    } catch (e) {
+      console.error("getClickUpConnection error", e);
+      return { connected: false };
+    }
   });
 
 // Public: returns the ClickUp authorize URL. Auth is enforced when the
