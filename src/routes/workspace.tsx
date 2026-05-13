@@ -16,6 +16,7 @@ import {
 import { TopHeader } from "@/components/divan/TopHeader";
 import { Sidebar, type NavItem } from "@/components/divan/Sidebar";
 import { TaskCard } from "@/components/divan/TaskCard";
+import { AppFooter } from "@/components/divan/AppFooter";
 import { COMPANIES, TODAY_TASKS_FOR_TEAM } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/workspace")({

@@ -13,6 +13,7 @@ import { TopHeader } from "@/components/divan/TopHeader";
 import { Sidebar, type NavItem } from "@/components/divan/Sidebar";
 import { MetricCard } from "@/components/divan/MetricCard";
 import { TaskCard } from "@/components/divan/TaskCard";
+import { AppFooter } from "@/components/divan/AppFooter";
 import {
   COMPANIES,
   TASKS,
@@ -181,6 +182,7 @@ function PortalDashboard() {
               </a>
             </section>
           </div>
+          <AppFooter />
         </main>
       </div>
     </div>
