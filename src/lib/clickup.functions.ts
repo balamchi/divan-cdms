@@ -23,7 +23,7 @@ async function getAppUserId(supabase: any, authUserId: string): Promise<string> 
 export const getClickUpConnection = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const userId = await getAppUserId(context.supabase);
+    const userId = await getAppUserId(context.supabase, context.userId);
     const { data } = await supabaseAdmin
       .from("clickup_tokens")
       .select("user_id, connected_at, last_used_at")
@@ -59,7 +59,7 @@ export const exchangeClickUpCode = createServerFn({ method: "POST" })
     const json = (await res.json()) as { access_token?: string };
     if (!json.access_token) throw new Error("No access_token in ClickUp response");
 
-    const userId = await getAppUserId(context.supabase);
+    const userId = await getAppUserId(context.supabase, context.userId);
     const encrypted = encryptToken(json.access_token);
     const { error } = await supabaseAdmin
       .from("clickup_tokens")
@@ -105,7 +105,7 @@ export const syncClickUpList = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const listId = data.list_id || VIVIA_RIU_DEFAULT_LIST_ID;
-    const userId = await getAppUserId(context.supabase);
+    const userId = await getAppUserId(context.supabase, context.userId);
 
     const { data: tok, error: tokErr } = await supabaseAdmin
       .from("clickup_tokens")
