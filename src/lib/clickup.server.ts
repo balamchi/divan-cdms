@@ -167,5 +167,5 @@ export async function syncList(authUserId: string, supabase: any, listId: string
     .update({ last_used_at: new Date().toISOString() })
     .eq("user_id", userId);
 
-  return { synced: rows.length, list_id: listId };
+  return { success: true, count: rows.length, synced: rows.length, list_id: listId };
 }
