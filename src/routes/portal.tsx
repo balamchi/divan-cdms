@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Home,
   CheckCircle2,
@@ -14,12 +14,32 @@ import { Sidebar, type NavItem } from "@/components/divan/Sidebar";
 import { MetricCard } from "@/components/divan/MetricCard";
 import { TaskCard } from "@/components/divan/TaskCard";
 import { AppFooter } from "@/components/divan/AppFooter";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import {
   COMPANIES,
   TASKS,
   DIVAN_TEAM_FOR_CLIENT,
   type Task,
+  type TaskKind,
+  type TaskStatus,
 } from "@/lib/mock-data";
+
+const VIVIA_COMPANY_UUID = "fb5bcc0c-666e-437f-abd0-8a1507b30c99";
+
+export const Route = createFileRoute("/portal")({
+  component: PortalDashboard,
+  head: () => ({
+    meta: [
+      { title: "Client portal · Divan CDMS" },
+      {
+        name: "description",
+        content:
+          "Approve content, review your monthly report, and message your Divan team — all in one place.",
+      },
+    ],
+  }),
+});
 
 export const Route = createFileRoute("/portal")({
   component: PortalDashboard,
