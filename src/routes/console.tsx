@@ -65,7 +65,8 @@ function AdminConsole() {
     setSyncing(true);
     try {
       const r = await sync({ data: {} });
-      toast.success(`Synced ${r.synced} task${r.synced === 1 ? "" : "s"} from Vivia Riu`);
+      const n = (r as any)?.count ?? (r as any)?.synced ?? 0;
+      toast.success(`Synced ${n} task${n === 1 ? "" : "s"} from Vivia Riu`);
     } catch (e: any) {
       toast.error(e?.message ?? "Sync failed");
     } finally {
