@@ -31,6 +31,20 @@ const LEAD_STAGES = [
 
 function AdminConsole() {
   const activeRetainers = COMPANIES.filter(() => true).length;
+  const [syncing, setSyncing] = useState(false);
+  const sync = useServerFn(syncClickUpList);
+
+  const runSync = async () => {
+    setSyncing(true);
+    try {
+      const r = await sync({ data: {} });
+      toast.success(`Synced ${r.synced} task${r.synced === 1 ? "" : "s"} from Vivia Riu`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Sync failed");
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--background)" }}>
