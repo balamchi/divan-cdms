@@ -57,11 +57,49 @@ export const Route = createFileRoute("/portal")({
 
 function PortalDashboard() {
   const company = COMPANIES[0]; // Vivia Riu
+  const { user } = useAuth();
   const companyTasks = useMemo(
     () => TASKS.filter((t) => t.companyId === company.id),
     [company.id],
   );
   const [tasks, setTasks] = useState<Task[]>(companyTasks);
+  const [loadedReal, setLoadedReal] = useState(false);
+
+  // For Vivia Riu only: replace mock with real cached ClickUp tasks if any exist.
+  useEffect(() => {
+    const isVivia = user?.company_id === VIVIA_COMPANY_UUID;
+    if (!isVivia) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("clickup_tasks_cache")
+        .select("task_id, subject, name, description, kind, status, publish_date, assignees")
+        .eq("company_id", VIVIA_COMPANY_UUID);
+      if (cancelled) return;
+      if (error || !data) return;
+      const mapped: Task[] = data.map((r) => ({
+        id: r.task_id,
+        companyId: company.id,
+        subject: r.subject || r.name || "(untitled)",
+        description: r.description || "",
+        kind: (r.kind as TaskKind) || "Publish Plan",
+        status: (r.status as TaskStatus) || "to do",
+        publishDate: r.publish_date || new Date().toISOString(),
+        assignees: Array.isArray(r.assignees)
+          ? (r.assignees as any[])
+              .map((a) => a?.username || a?.email || "")
+              .filter(Boolean)
+          : [],
+      }));
+      // Always switch to real data once we've loaded it (even if empty).
+      setTasks(mapped);
+      setLoadedReal(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.company_id, company.id]);
+  void loadedReal;
 
   const awaiting = tasks.filter((t) => t.status === "Client Review");
   const scheduled = tasks.filter((t) => t.status === "Approved");
