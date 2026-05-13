@@ -38,6 +38,33 @@ export const getClickUpConnection = createServerFn({ method: "GET" })
     }
   });
 
+// Public-tolerant read of cached ClickUp tasks for a single company.
+// Currently whitelisted to the Vivia Riu pilot company so demo (unauthed)
+// users can preview real synced data without weakening RLS for other tenants.
+const VIVIA_COMPANY_UUID = "fb5bcc0c-666e-437f-abd0-8a1507b30c99";
+export const getPortalTasks = createServerFn({ method: "GET" })
+  .inputValidator((input) =>
+    z.object({ company_id: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    try {
+      if (data.company_id !== VIVIA_COMPANY_UUID) return { tasks: [] };
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: rows, error } = await supabaseAdmin
+        .from("clickup_tasks_cache")
+        .select("task_id,name,subject,description,kind,status,publish_date,assignees,company_id")
+        .eq("company_id", data.company_id);
+      if (error) {
+        console.error("getPortalTasks error", error);
+        return { tasks: [] };
+      }
+      return { tasks: rows ?? [] };
+    } catch (e) {
+      console.error("getPortalTasks failed", e);
+      return { tasks: [] };
+    }
+  });
+
 // Public: returns the ClickUp authorize URL. Auth is enforced when the
 // callback exchanges the code, not here, so demo role-switched users can
 // initiate the flow and be prompted to sign in on return.
