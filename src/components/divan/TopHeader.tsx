@@ -54,10 +54,7 @@ export function TopHeader({ role, userName, initials, unread = 0 }: TopHeaderPro
           aria-label="Notifications"
           className="relative h-8 w-8 grid place-items-center rounded-md hover:bg-white/10 transition-colors"
         >
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-          </svg>
+          <Bell className="h-4 w-4" />
           {unread > 0 && (
             <span
               className="absolute top-1 right-1 h-4 min-w-[16px] px-1 rounded-full text-[10px] font-medium grid place-items-center text-white"
