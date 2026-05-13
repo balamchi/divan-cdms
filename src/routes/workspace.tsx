@@ -237,6 +237,7 @@ function WorkspaceMyDay() {
               </div>
             </section>
           </div>
+          <AppFooter />
         </main>
       </div>
     </div>

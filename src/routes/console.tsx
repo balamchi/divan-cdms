@@ -176,6 +176,7 @@ function AdminConsole() {
             </div>
           </section>
         </div>
+        <AppFooter />
       </main>
     </div>
   );
