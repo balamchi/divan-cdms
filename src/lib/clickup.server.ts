@@ -124,12 +124,14 @@ export async function syncList(authUserId: string, supabase: any, listId: string
   console.log("[syncList] total tasks fetched:", tasks.length);
 
   const folderIds = Array.from(new Set(tasks.map((t) => t?.folder?.id).filter(Boolean)));
+  console.log("[syncList] unique folderIds from tasks:", folderIds);
   const companyByFolder = new Map<string, string>();
   if (folderIds.length > 0) {
-    const { data: companies } = await supabaseAdmin
+    const { data: companies, error: cErr } = await supabaseAdmin
       .from("companies")
       .select("id, clickup_folder_id")
       .in("clickup_folder_id", folderIds as string[]);
+    console.log("[syncList] companies matched:", companies, "err:", cErr);
     for (const c of companies ?? []) {
       if (c.clickup_folder_id) companyByFolder.set(c.clickup_folder_id, c.id);
     }
@@ -137,13 +139,14 @@ export async function syncList(authUserId: string, supabase: any, listId: string
 
   const rows: any[] = [];
   for (const t of tasks) {
+    console.log("[syncList] task", t.id, t.name, "folder=", t?.folder?.id);
     const detailRes = await fetch(
       `https://api.clickup.com/api/v2/task/${encodeURIComponent(t.id)}`,
       { headers: auth },
     );
     const detail = detailRes.ok ? await detailRes.json() : t;
     const fields: ClickUpCustomField[] = detail.custom_fields ?? [];
-    rows.push({
+    const row = {
       task_id: detail.id,
       list_id: detail.list?.id ?? listId,
       folder_id: detail.folder?.id ?? null,
@@ -159,13 +162,24 @@ export async function syncList(authUserId: string, supabase: any, listId: string
       attachments: detail.attachments ?? [],
       url: detail.url ?? null,
       last_synced_at: new Date().toISOString(),
+    };
+    console.log("[syncList] row to upsert:", {
+      task_id: row.task_id,
+      folder_id: row.folder_id,
+      company_id: row.company_id,
+      name: row.name,
+      status: row.status,
     });
+    rows.push(row);
   }
 
+  console.log("[syncList] about to upsert rows.length=", rows.length);
   if (rows.length > 0) {
-    const { error: upErr } = await supabaseAdmin
+    const { error: upErr, data: upData } = await supabaseAdmin
       .from("clickup_tasks_cache")
-      .upsert(rows, { onConflict: "task_id" });
+      .upsert(rows, { onConflict: "task_id" })
+      .select("task_id");
+    console.log("[syncList] upsert result. err:", upErr, "rowsReturned:", upData?.length);
     if (upErr) throw new Error(upErr.message);
   }
 
@@ -173,6 +187,8 @@ export async function syncList(authUserId: string, supabase: any, listId: string
     .from("clickup_tokens")
     .update({ last_used_at: new Date().toISOString() })
     .eq("user_id", userId);
+
+  console.log("[syncList] returning count=", rows.length);
 
   return { success: true, count: rows.length, synced: rows.length, list_id: listId };
 }
