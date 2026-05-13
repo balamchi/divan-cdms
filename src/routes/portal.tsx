@@ -14,7 +14,8 @@ import { Sidebar, type NavItem } from "@/components/divan/Sidebar";
 import { MetricCard } from "@/components/divan/MetricCard";
 import { TaskCard } from "@/components/divan/TaskCard";
 import { AppFooter } from "@/components/divan/AppFooter";
-import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { getPortalTasks } from "@/lib/clickup.functions";
 import { useAuth } from "@/lib/auth";
 import {
   COMPANIES,
