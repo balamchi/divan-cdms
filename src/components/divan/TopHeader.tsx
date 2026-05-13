@@ -7,7 +7,7 @@ import { RoleSwitcher } from "./RoleSwitcher";
 import { useAuth } from "@/lib/auth";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { getClickUpConnection } from "@/lib/clickup.functions";
+import { getClickUpConnection, getClickUpAuthorizeUrl } from "@/lib/clickup.functions";
 
 interface TopHeaderProps {
   role: Role;
