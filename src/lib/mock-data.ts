@@ -40,7 +40,7 @@ export interface Task {
 export const COMPANIES: Company[] = [
   { id: "vivia", name: "Vivia Riu Medspa", monthlyContentCount: 20, mrr: 3200, postsDone: 14, postsPlanned: 20, reachDelta: 34 },
   { id: "maple", name: "MapleDerm", monthlyContentCount: 16, mrr: 2800, postsDone: 13, postsPlanned: 16, reachDelta: 12 },
-  { id: "par", name: "Par Aesthetics", monthlyContentCount: 18, mrr: 2950, postsDone: 9, postsPlanned: 18, reachDelta: -4 },
+  { id: "par", name: "Par Aesthetics", monthlyContentCount: 18, mrr: 2950, postsDone: 16, postsPlanned: 18, reachDelta: 12 },
   { id: "muchin", name: "Muchin", monthlyContentCount: 12, mrr: 2100, postsDone: 11, postsPlanned: 12, reachDelta: 22 },
   { id: "venus", name: "Venus Cosmedical", monthlyContentCount: 18, mrr: 3050, postsDone: 16, postsPlanned: 18, reachDelta: 41 },
   { id: "rose", name: "Rose Beauty", monthlyContentCount: 14, mrr: 2200, postsDone: 6, postsPlanned: 14, reachDelta: -11 },

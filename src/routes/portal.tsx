@@ -100,7 +100,7 @@ function PortalDashboard() {
           <header className="mb-6">
             <h1 className="text-[18px] font-medium">Welcome back, Vivi</h1>
             <p className="text-[12px] text-text-secondary mt-0.5">
-              {awaiting.length} items need your review · Next shoot: May 18
+              {awaiting.length} {awaiting.length === 1 ? "item" : "items"} need your review · Next shoot: May 18
             </p>
           </header>
 
