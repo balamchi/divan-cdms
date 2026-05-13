@@ -1,10 +1,13 @@
-import { Bell, LogOut } from "lucide-react";
+import { Bell, LogOut, Link2, Check } from "lucide-react";
+import { useEffect, useState } from "react";
 import { DivanLogo } from "./DivanLogo";
 import type { Role } from "@/lib/roles";
 import { ROLE_THEME } from "@/lib/roles";
 import { RoleSwitcher } from "./RoleSwitcher";
 import { useAuth } from "@/lib/auth";
 import { useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { getClickUpConnection } from "@/lib/clickup.functions";
 
 interface TopHeaderProps {
   role: Role;
@@ -22,6 +25,28 @@ export function TopHeader({ role, userName, initials, unread = 0 }: TopHeaderPro
   const displayInitials = user?.full_name
     ? user.full_name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()
     : initials;
+  const showClickUp = authed && (user?.role === "team" || user?.role === "admin");
+  const [cuConnected, setCuConnected] = useState<boolean | null>(null);
+  const fetchConn = useServerFn(getClickUpConnection);
+
+  useEffect(() => {
+    if (!showClickUp) return;
+    fetchConn({}).then((r) => setCuConnected(r.connected)).catch(() => setCuConnected(false));
+  }, [showClickUp, fetchConn]);
+
+  const connectClickUp = () => {
+    const clientId = import.meta.env.VITE_CLICKUP_CLIENT_ID as string | undefined;
+    const redirectUri = `${window.location.origin}/clickup/callback`;
+    if (!clientId) {
+      window.alert(
+        "CLICKUP_CLIENT_ID is not exposed to the browser. Add it as VITE_CLICKUP_CLIENT_ID in Project Settings → Build Secrets so the OAuth button can construct the authorize URL.",
+      );
+      return;
+    }
+    window.location.href = `https://app.clickup.com/api?client_id=${encodeURIComponent(
+      clientId,
+    )}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+  };
 
   return (
     <header
