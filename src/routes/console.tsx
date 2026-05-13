@@ -1,13 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Sparkles, AlertCircle, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { Sparkles, AlertCircle, RefreshCw, Link2, Check } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { syncClickUpList } from "@/lib/clickup.functions";
+import {
+  syncClickUpList,
+  getClickUpConnection,
+  getClickUpAuthorizeUrl,
+} from "@/lib/clickup.functions";
 import { TopHeader } from "@/components/divan/TopHeader";
 import { MetricCard } from "@/components/divan/MetricCard";
 import { AppFooter } from "@/components/divan/AppFooter";
 import { COMPANIES } from "@/lib/mock-data";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/console")({
   component: AdminConsole,
@@ -33,6 +38,28 @@ function AdminConsole() {
   const activeRetainers = COMPANIES.filter(() => true).length;
   const [syncing, setSyncing] = useState(false);
   const sync = useServerFn(syncClickUpList);
+  const fetchConn = useServerFn(getClickUpConnection);
+  const fetchAuthorizeUrl = useServerFn(getClickUpAuthorizeUrl);
+  const { session } = useAuth();
+  const [cuConnected, setCuConnected] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!session) {
+      setCuConnected(false);
+      return;
+    }
+    fetchConn({}).then((r) => setCuConnected(r.connected)).catch(() => setCuConnected(false));
+  }, [session, fetchConn]);
+
+  const connectClickUp = async () => {
+    try {
+      const redirectUri = `${window.location.origin}/clickup/callback`;
+      const { url } = await fetchAuthorizeUrl({ data: { redirect_uri: redirectUri } });
+      window.location.href = url;
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not start ClickUp connection");
+    }
+  };
 
   const runSync = async () => {
     setSyncing(true);
@@ -89,6 +116,33 @@ function AdminConsole() {
             delta="target 75%"
             deltaTone="neutral"
           />
+        </div>
+
+        {/* Fallback Connect ClickUp button (always visible to admin) */}
+        <div className="flex justify-end mb-4">
+          {cuConnected ? (
+            <span
+              className="inline-flex items-center gap-2 h-9 px-3 rounded-md text-[12px] font-medium border"
+              style={{ borderColor: "var(--success)", color: "var(--success)" }}
+            >
+              <span
+                className="h-2 w-2 rounded-full"
+                style={{ background: "var(--success)" }}
+                aria-hidden
+              />
+              ClickUp connected
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={connectClickUp}
+              className="inline-flex items-center gap-2 h-9 px-3 rounded-md text-[12px] font-medium border hover:bg-[color-mix(in_oklab,var(--magenta)_8%,transparent)] transition-colors"
+              style={{ borderColor: "var(--magenta)", color: "var(--magenta)" }}
+            >
+              <Link2 className="h-3.5 w-3.5" strokeWidth={1.8} />
+              Connect ClickUp
+            </button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">

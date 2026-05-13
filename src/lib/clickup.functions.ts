@@ -15,8 +15,10 @@ export const getClickUpConnection = createServerFn({ method: "GET" })
     return getConnectionStatus(context.userId, context.supabase);
   });
 
+// Public: returns the ClickUp authorize URL. Auth is enforced when the
+// callback exchanges the code, not here, so demo role-switched users can
+// initiate the flow and be prompted to sign in on return.
 export const getClickUpAuthorizeUrl = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
     z.object({ redirect_uri: z.string().url().max(500) }).parse(input),
   )
