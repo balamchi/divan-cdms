@@ -1,13 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Sparkles, AlertCircle, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { Sparkles, AlertCircle, RefreshCw, Link2, Check } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { syncClickUpList } from "@/lib/clickup.functions";
+import {
+  syncClickUpList,
+  getClickUpConnection,
+  getClickUpAuthorizeUrl,
+} from "@/lib/clickup.functions";
 import { TopHeader } from "@/components/divan/TopHeader";
 import { MetricCard } from "@/components/divan/MetricCard";
 import { AppFooter } from "@/components/divan/AppFooter";
 import { COMPANIES } from "@/lib/mock-data";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/console")({
   component: AdminConsole,
