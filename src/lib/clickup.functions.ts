@@ -9,12 +9,14 @@ import { encryptToken, decryptToken } from "./clickup-crypto.server";
 
 export const VIVIA_RIU_DEFAULT_LIST_ID = "901416054141";
 
-async function getAppUserId(supabase: any): Promise<string> {
+async function getAppUserId(supabase: any, authUserId: string): Promise<string> {
   const { data, error } = await supabase
     .from("users")
-    .select("id, role")
-    .single();
-  if (error || !data) throw new Error("App user not found");
+    .select("id")
+    .eq("auth_user_id", authUserId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("App user not found for current session");
   return data.id as string;
 }
 
