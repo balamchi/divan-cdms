@@ -118,6 +118,33 @@ function AdminConsole() {
           />
         </div>
 
+        {/* Fallback Connect ClickUp button (always visible to admin) */}
+        <div className="flex justify-end mb-4">
+          {cuConnected ? (
+            <span
+              className="inline-flex items-center gap-2 h-9 px-3 rounded-md text-[12px] font-medium border"
+              style={{ borderColor: "var(--success)", color: "var(--success)" }}
+            >
+              <span
+                className="h-2 w-2 rounded-full"
+                style={{ background: "var(--success)" }}
+                aria-hidden
+              />
+              ClickUp connected
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={connectClickUp}
+              className="inline-flex items-center gap-2 h-9 px-3 rounded-md text-[12px] font-medium border hover:bg-[color-mix(in_oklab,var(--magenta)_8%,transparent)] transition-colors"
+              style={{ borderColor: "var(--magenta)", color: "var(--magenta)" }}
+            >
+              <Link2 className="h-3.5 w-3.5" strokeWidth={1.8} />
+              Connect ClickUp
+            </button>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Retainer health */}
           <section className="lg:col-span-3 rounded-xl border border-border bg-card overflow-hidden">
