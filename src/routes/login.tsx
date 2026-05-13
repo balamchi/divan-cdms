@@ -1,7 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DivanLogo } from "@/components/divan/DivanLogo";
 import { setActiveRole, type Role, ROLE_THEME } from "@/lib/roles";
+import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -17,14 +20,68 @@ export const Route = createFileRoute("/login")({
   }),
 });
 
+async function routeForSignedInUser(navigate: ReturnType<typeof useNavigate>, email: string | undefined) {
+  if (!email) return;
+  const { data } = await supabase
+    .from("users")
+    .select("role")
+    .eq("email", email)
+    .maybeSingle();
+  const role = (data?.role as Role | undefined) ?? "client";
+  setActiveRole(role);
+  navigate({ to: ROLE_THEME[role].route });
+}
+
 function LoginPage() {
   const [tab, setTab] = useState<"team" | "client">("client");
   const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
 
-  const enterAs = (role: Role) => {
+  // If a session is already present (or one comes back from OAuth), redirect.
+  useEffect(() => {
+    let mounted = true;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (mounted && session) routeForSignedInUser(navigate, session.user.email ?? undefined);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (session) routeForSignedInUser(navigate, session.user.email ?? undefined);
+    });
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
+  }, [navigate]);
+
+  const enterAsDemo = (role: Role) => {
     setActiveRole(role);
     navigate({ to: ROLE_THEME[role].route });
+  };
+
+  const sendMagicLink = async () => {
+    if (!email) return;
+    setBusy(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin },
+    });
+    setBusy(false);
+    if (error) toast.error(error.message);
+    else toast.success("Magic link sent. Check your inbox.");
+  };
+
+  const signInGoogle = async () => {
+    setBusy(true);
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
+    });
+    if (result.error) {
+      setBusy(false);
+      toast.error(result.error.message ?? "Sign in failed");
+      return;
+    }
+    if (result.redirected) return; // browser will navigate
+    // tokens already set — auth state change handler will route
   };
 
   return (
@@ -44,20 +101,9 @@ function LoginPage() {
             aesthetics, beauty, real estate, and hospitality clients.
           </p>
           <div className="pt-6 flex gap-2">
-            <span
-              className="h-8 w-8 rounded-md"
-              style={{ background: "var(--teal)" }}
-              aria-hidden
-            />
-            <span
-              className="h-8 w-8 rounded-md"
-              style={{ background: "var(--magenta)" }}
-              aria-hidden
-            />
-            <span
-              className="h-8 w-8 rounded-md border border-white/15"
-              aria-hidden
-            />
+            <span className="h-8 w-8 rounded-md" style={{ background: "var(--teal)" }} aria-hidden />
+            <span className="h-8 w-8 rounded-md" style={{ background: "var(--magenta)" }} aria-hidden />
+            <span className="h-8 w-8 rounded-md border border-white/15" aria-hidden />
           </div>
         </div>
         <p className="text-[11px] text-white/50">
@@ -96,7 +142,8 @@ function LoginPage() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              enterAs(tab === "client" ? "client" : "team");
+              if (tab === "client") sendMagicLink();
+              else signInGoogle();
             }}
             className="space-y-3"
           >
@@ -106,6 +153,7 @@ function LoginPage() {
                   <span className="text-[12px] text-text-secondary">Work email</span>
                   <input
                     type="email"
+                    required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@viviariu.com"
@@ -114,42 +162,44 @@ function LoginPage() {
                 </label>
                 <button
                   type="submit"
-                  className="w-full h-10 rounded-md text-white text-[13px] font-medium transition-opacity hover:opacity-90"
+                  disabled={busy}
+                  className="w-full h-10 rounded-md text-white text-[13px] font-medium transition-opacity hover:opacity-90 disabled:opacity-60"
                   style={{ background: "var(--teal)" }}
                 >
-                  Send magic link
+                  {busy ? "Sending…" : "Send magic link"}
                 </button>
               </>
             ) : (
               <button
                 type="submit"
-                className="w-full h-10 rounded-md text-white text-[13px] font-medium transition-opacity hover:opacity-90"
+                disabled={busy}
+                className="w-full h-10 rounded-md text-white text-[13px] font-medium transition-opacity hover:opacity-90 disabled:opacity-60"
                 style={{ background: "var(--magenta)" }}
               >
-                Continue with Google
+                {busy ? "Redirecting…" : "Continue with Google"}
               </button>
             )}
           </form>
 
           <div className="mt-8 pt-6 border-t border-border">
             <p className="text-[11px] uppercase tracking-wider text-text-secondary mb-3">
-              Demo · jump straight in
+              Demo · jump straight in (preview only)
             </p>
             <div className="flex flex-wrap gap-2">
               <button
-                onClick={() => enterAs("client")}
+                onClick={() => enterAsDemo("client")}
                 className="h-8 px-3 rounded-md text-[12px] border border-border hover:bg-secondary"
               >
                 As Vivi (client)
               </button>
               <button
-                onClick={() => enterAs("team")}
+                onClick={() => enterAsDemo("team")}
                 className="h-8 px-3 rounded-md text-[12px] border border-border hover:bg-secondary"
               >
                 As Rahil (team)
               </button>
               <button
-                onClick={() => enterAs("admin")}
+                onClick={() => enterAsDemo("admin")}
                 className="h-8 px-3 rounded-md text-[12px] border border-border hover:bg-secondary"
               >
                 As Shahab (admin)
