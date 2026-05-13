@@ -15,6 +15,20 @@ export const getClickUpConnection = createServerFn({ method: "GET" })
     return getConnectionStatus(context.userId, context.supabase);
   });
 
+export const getClickUpAuthorizeUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ redirect_uri: z.string().url().max(500) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const clientId = process.env.CLICKUP_CLIENT_ID;
+    if (!clientId) throw new Error("CLICKUP_CLIENT_ID not configured");
+    const url = `https://app.clickup.com/api?client_id=${encodeURIComponent(
+      clientId,
+    )}&redirect_uri=${encodeURIComponent(data.redirect_uri)}`;
+    return { url };
+  });
+
 export const exchangeClickUpCode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ code: z.string().min(1).max(2000) }).parse(input))
