@@ -174,7 +174,7 @@ function PortalDashboard() {
             </div>
             {awaiting.length === 0 ? (
               <div className="rounded-xl border border-border bg-card p-8 text-center text-[13px] text-text-secondary">
-                You're all caught up. Nice.
+                All caught up! No items need your review.
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
