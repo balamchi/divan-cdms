@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Sparkles, AlertCircle } from "lucide-react";
 import { TopHeader } from "@/components/divan/TopHeader";
 import { MetricCard } from "@/components/divan/MetricCard";
+import { AppFooter } from "@/components/divan/AppFooter";
 import { COMPANIES } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/console")({
@@ -175,6 +176,7 @@ function AdminConsole() {
             </div>
           </section>
         </div>
+        <AppFooter />
       </main>
     </div>
   );

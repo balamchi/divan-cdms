@@ -13,6 +13,7 @@ import { TopHeader } from "@/components/divan/TopHeader";
 import { Sidebar, type NavItem } from "@/components/divan/Sidebar";
 import { MetricCard } from "@/components/divan/MetricCard";
 import { TaskCard } from "@/components/divan/TaskCard";
+import { AppFooter } from "@/components/divan/AppFooter";
 import {
   COMPANIES,
   TASKS,
@@ -100,7 +101,7 @@ function PortalDashboard() {
           <header className="mb-6">
             <h1 className="text-[18px] font-medium">Welcome back, Vivi</h1>
             <p className="text-[12px] text-text-secondary mt-0.5">
-              {awaiting.length} items need your review · Next shoot: May 18
+              {awaiting.length} {awaiting.length === 1 ? "item needs" : "items need"} your review · Next shoot: May 18
             </p>
           </header>
 
@@ -181,6 +182,7 @@ function PortalDashboard() {
               </a>
             </section>
           </div>
+          <AppFooter />
         </main>
       </div>
     </div>
