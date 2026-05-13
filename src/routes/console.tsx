@@ -38,6 +38,28 @@ function AdminConsole() {
   const activeRetainers = COMPANIES.filter(() => true).length;
   const [syncing, setSyncing] = useState(false);
   const sync = useServerFn(syncClickUpList);
+  const fetchConn = useServerFn(getClickUpConnection);
+  const fetchAuthorizeUrl = useServerFn(getClickUpAuthorizeUrl);
+  const { session } = useAuth();
+  const [cuConnected, setCuConnected] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!session) {
+      setCuConnected(false);
+      return;
+    }
+    fetchConn({}).then((r) => setCuConnected(r.connected)).catch(() => setCuConnected(false));
+  }, [session, fetchConn]);
+
+  const connectClickUp = async () => {
+    try {
+      const redirectUri = `${window.location.origin}/clickup/callback`;
+      const { url } = await fetchAuthorizeUrl({ data: { redirect_uri: redirectUri } });
+      window.location.href = url;
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not start ClickUp connection");
+    }
+  };
 
   const runSync = async () => {
     setSyncing(true);
