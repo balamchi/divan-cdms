@@ -28,24 +28,21 @@ export function TopHeader({ role, userName, initials, unread = 0 }: TopHeaderPro
   const showClickUp = authed && (user?.role === "team" || user?.role === "admin");
   const [cuConnected, setCuConnected] = useState<boolean | null>(null);
   const fetchConn = useServerFn(getClickUpConnection);
+  const fetchAuthorizeUrl = useServerFn(getClickUpAuthorizeUrl);
 
   useEffect(() => {
     if (!showClickUp) return;
     fetchConn({}).then((r) => setCuConnected(r.connected)).catch(() => setCuConnected(false));
   }, [showClickUp, fetchConn]);
 
-  const connectClickUp = () => {
-    const clientId = import.meta.env.VITE_CLICKUP_CLIENT_ID as string | undefined;
-    const redirectUri = `${window.location.origin}/clickup/callback`;
-    if (!clientId) {
-      window.alert(
-        "CLICKUP_CLIENT_ID is not exposed to the browser. Add it as VITE_CLICKUP_CLIENT_ID in Project Settings → Build Secrets so the OAuth button can construct the authorize URL.",
-      );
-      return;
+  const connectClickUp = async () => {
+    try {
+      const redirectUri = `${window.location.origin}/clickup/callback`;
+      const { url } = await fetchAuthorizeUrl({ data: { redirect_uri: redirectUri } });
+      window.location.href = url;
+    } catch (e: any) {
+      window.alert(e?.message ?? "Could not start ClickUp connection");
     }
-    window.location.href = `https://app.clickup.com/api?client_id=${encodeURIComponent(
-      clientId,
-    )}&redirect_uri=${encodeURIComponent(redirectUri)}`;
   };
 
   return (
