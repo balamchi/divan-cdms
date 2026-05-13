@@ -41,20 +41,6 @@ export const Route = createFileRoute("/portal")({
   }),
 });
 
-export const Route = createFileRoute("/portal")({
-  component: PortalDashboard,
-  head: () => ({
-    meta: [
-      { title: "Client portal · Divan CDMS" },
-      {
-        name: "description",
-        content:
-          "Approve content, review your monthly report, and message your Divan team — all in one place.",
-      },
-    ],
-  }),
-});
-
 function PortalDashboard() {
   const company = COMPANIES[0]; // Vivia Riu
   const { user } = useAuth();
