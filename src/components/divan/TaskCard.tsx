@@ -12,7 +12,7 @@ const KIND_ICON: Record<TaskKind, typeof ImageIcon> = {
 };
 
 const fmt = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-CA", { month: "short", day: "numeric" });
+  new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 
 interface TaskCardProps {
   task: Task;
