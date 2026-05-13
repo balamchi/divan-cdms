@@ -3,6 +3,8 @@ import { useEffect, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { exchangeClickUpCode } from "@/lib/clickup.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { ROLE_THEME, setActiveRole, type Role } from "@/lib/roles";
 
 export const Route = createFileRoute("/clickup/callback")({
   component: ClickUpCallback,
