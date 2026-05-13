@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Home,
   CheckCircle2,
@@ -14,12 +14,18 @@ import { Sidebar, type NavItem } from "@/components/divan/Sidebar";
 import { MetricCard } from "@/components/divan/MetricCard";
 import { TaskCard } from "@/components/divan/TaskCard";
 import { AppFooter } from "@/components/divan/AppFooter";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import {
   COMPANIES,
   TASKS,
   DIVAN_TEAM_FOR_CLIENT,
   type Task,
+  type TaskKind,
+  type TaskStatus,
 } from "@/lib/mock-data";
+
+const VIVIA_COMPANY_UUID = "fb5bcc0c-666e-437f-abd0-8a1507b30c99";
 
 export const Route = createFileRoute("/portal")({
   component: PortalDashboard,
@@ -37,11 +43,49 @@ export const Route = createFileRoute("/portal")({
 
 function PortalDashboard() {
   const company = COMPANIES[0]; // Vivia Riu
+  const { user } = useAuth();
   const companyTasks = useMemo(
     () => TASKS.filter((t) => t.companyId === company.id),
     [company.id],
   );
   const [tasks, setTasks] = useState<Task[]>(companyTasks);
+  const [loadedReal, setLoadedReal] = useState(false);
+
+  // For Vivia Riu only: replace mock with real cached ClickUp tasks if any exist.
+  useEffect(() => {
+    const isVivia = user?.company_id === VIVIA_COMPANY_UUID;
+    if (!isVivia) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("clickup_tasks_cache")
+        .select("task_id, subject, name, description, kind, status, publish_date, assignees")
+        .eq("company_id", VIVIA_COMPANY_UUID);
+      if (cancelled) return;
+      if (error || !data) return;
+      const mapped: Task[] = data.map((r) => ({
+        id: r.task_id,
+        companyId: company.id,
+        subject: r.subject || r.name || "(untitled)",
+        description: r.description || "",
+        kind: (r.kind as TaskKind) || "Publish Plan",
+        status: (r.status as TaskStatus) || "to do",
+        publishDate: r.publish_date || new Date().toISOString(),
+        assignees: Array.isArray(r.assignees)
+          ? (r.assignees as any[])
+              .map((a) => a?.username || a?.email || "")
+              .filter(Boolean)
+          : [],
+      }));
+      // Always switch to real data once we've loaded it (even if empty).
+      setTasks(mapped);
+      setLoadedReal(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.company_id, company.id]);
+  void loadedReal;
 
   const awaiting = tasks.filter((t) => t.status === "Client Review");
   const scheduled = tasks.filter((t) => t.status === "Approved");
@@ -130,7 +174,7 @@ function PortalDashboard() {
             </div>
             {awaiting.length === 0 ? (
               <div className="rounded-xl border border-border bg-card p-8 text-center text-[13px] text-text-secondary">
-                You're all caught up. Nice.
+                All caught up! No items need your review.
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">

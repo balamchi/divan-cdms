@@ -14,6 +14,7 @@ import { Route as PortalRouteImport } from './routes/portal'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ConsoleRouteImport } from './routes/console'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ClickupCallbackRouteImport } from './routes/clickup.callback'
 
 const WorkspaceRoute = WorkspaceRouteImport.update({
   id: '/workspace',
@@ -40,6 +41,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClickupCallbackRoute = ClickupCallbackRouteImport.update({
+  id: '/clickup/callback',
+  path: '/clickup/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
   '/workspace': typeof WorkspaceRoute
+  '/clickup/callback': typeof ClickupCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
   '/workspace': typeof WorkspaceRoute
+  '/clickup/callback': typeof ClickupCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,33 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
   '/workspace': typeof WorkspaceRoute
+  '/clickup/callback': typeof ClickupCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/console' | '/login' | '/portal' | '/workspace'
+  fullPaths:
+    | '/'
+    | '/console'
+    | '/login'
+    | '/portal'
+    | '/workspace'
+    | '/clickup/callback'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/console' | '/login' | '/portal' | '/workspace'
-  id: '__root__' | '/' | '/console' | '/login' | '/portal' | '/workspace'
+  to:
+    | '/'
+    | '/console'
+    | '/login'
+    | '/portal'
+    | '/workspace'
+    | '/clickup/callback'
+  id:
+    | '__root__'
+    | '/'
+    | '/console'
+    | '/login'
+    | '/portal'
+    | '/workspace'
+    | '/clickup/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +105,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PortalRoute: typeof PortalRoute
   WorkspaceRoute: typeof WorkspaceRoute
+  ClickupCallbackRoute: typeof ClickupCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/clickup/callback': {
+      id: '/clickup/callback'
+      path: '/clickup/callback'
+      fullPath: '/clickup/callback'
+      preLoaderRoute: typeof ClickupCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -125,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PortalRoute: PortalRoute,
   WorkspaceRoute: WorkspaceRoute,
+  ClickupCallbackRoute: ClickupCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

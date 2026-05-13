@@ -1,5 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Sparkles, AlertCircle } from "lucide-react";
+import { Sparkles, AlertCircle, RefreshCw } from "lucide-react";
+import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { syncClickUpList } from "@/lib/clickup.functions";
 import { TopHeader } from "@/components/divan/TopHeader";
 import { MetricCard } from "@/components/divan/MetricCard";
 import { AppFooter } from "@/components/divan/AppFooter";
@@ -27,6 +31,20 @@ const LEAD_STAGES = [
 
 function AdminConsole() {
   const activeRetainers = COMPANIES.filter(() => true).length;
+  const [syncing, setSyncing] = useState(false);
+  const sync = useServerFn(syncClickUpList);
+
+  const runSync = async () => {
+    setSyncing(true);
+    try {
+      const r = await sync({ data: {} });
+      toast.success(`Synced ${r.synced} task${r.synced === 1 ? "" : "s"} from Vivia Riu`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Sync failed");
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--background)" }}>
@@ -76,11 +94,26 @@ function AdminConsole() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Retainer health */}
           <section className="lg:col-span-3 rounded-xl border border-border bg-card overflow-hidden">
-            <header className="px-5 py-4 border-b border-border flex items-baseline justify-between">
+            <header className="px-5 py-4 border-b border-border flex items-center justify-between gap-3">
               <h2 className="text-[14px] font-medium">All retainers · health</h2>
-              <span className="text-[11px] text-text-secondary">
-                {COMPANIES.length} active
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] text-text-secondary">
+                  {COMPANIES.length} active
+                </span>
+                <button
+                  type="button"
+                  onClick={runSync}
+                  disabled={syncing}
+                  className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-medium text-white disabled:opacity-60"
+                  style={{ background: "var(--magenta)" }}
+                >
+                  <RefreshCw
+                    className={`h-3 w-3 ${syncing ? "animate-spin" : ""}`}
+                    strokeWidth={1.8}
+                  />
+                  {syncing ? "Syncing…" : "Sync Vivia Riu now"}
+                </button>
+              </div>
             </header>
             <table className="w-full text-[13px]">
               <thead>
