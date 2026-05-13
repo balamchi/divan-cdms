@@ -87,9 +87,15 @@ function PortalDashboard() {
   }, [effectiveCompanyId, company.id, fetchPortalTasks]);
 
   const awaiting = tasks.filter((t) => t.status === "Client Review");
-  const scheduled = tasks.filter((t) => t.status === "Approved");
+  const scheduledStatuses = new Set(["Approved", "complete", "to do", "in progress"]);
+  const weekFromNow = Date.now() + 7 * 86400000;
+  const scheduled = tasks.filter((t) => {
+    if (!scheduledStatuses.has(t.status)) return false;
+    const ts = +new Date(t.publishDate);
+    return ts >= Date.now() && ts <= weekFromNow;
+  });
   const upcoming = [...tasks]
-    .filter((t) => new Date(t.publishDate) >= new Date(Date.now() - 86400000))
+    .filter((t) => +new Date(t.publishDate) >= Date.now())
     .sort((a, b) => +new Date(a.publishDate) - +new Date(b.publishDate))
     .slice(0, 4);
 
