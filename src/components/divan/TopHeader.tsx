@@ -60,17 +60,34 @@ export function TopHeader({ role, userName, initials, unread = 0 }: TopHeaderPro
       </div>
       <div className="flex items-center gap-3 md:gap-5">
         {authed ? (
-          <button
-            type="button"
-            onClick={async () => {
-              await signOut();
-              navigate({ to: "/login" });
-            }}
-            className="hidden md:inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[12px] text-white/85 hover:bg-white/10 transition-colors"
-          >
-            <LogOut className="h-3.5 w-3.5" strokeWidth={1.6} />
-            Sign out
-          </button>
+          <>
+            {showClickUp && (
+              <button
+                type="button"
+                onClick={connectClickUp}
+                title={cuConnected ? "ClickUp connected" : "Connect your ClickUp account"}
+                className="hidden md:inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[12px] text-white/85 hover:bg-white/10 transition-colors"
+              >
+                {cuConnected ? (
+                  <Check className="h-3.5 w-3.5" strokeWidth={1.8} />
+                ) : (
+                  <Link2 className="h-3.5 w-3.5" strokeWidth={1.6} />
+                )}
+                {cuConnected ? "ClickUp connected" : "Connect ClickUp"}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={async () => {
+                await signOut();
+                navigate({ to: "/login" });
+              }}
+              className="hidden md:inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[12px] text-white/85 hover:bg-white/10 transition-colors"
+            >
+              <LogOut className="h-3.5 w-3.5" strokeWidth={1.6} />
+              Sign out
+            </button>
+          </>
         ) : (
           <RoleSwitcher current={role} />
         )}
