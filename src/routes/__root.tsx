@@ -77,10 +77,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "Divan CDMS — the team workspace and client portal for Divan Group. Discipline. Consistency. Creativity." },
       { name: "author", content: "Divan Group" },
       { property: "og:title", content: "Divan CDMS" },
-      { property: "og:description", content: "Divan CDMS — the team workspace and client portal for Divan Group." },
+      { property: "og:description", content: "Divan CDMS — the team workspace and client portal for Divan Group. Discipline. Consistency. Creativity." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Divan CDMS" },
+      { name: "twitter:description", content: "Divan CDMS — the team workspace and client portal for Divan Group. Discipline. Consistency. Creativity." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/ece204a8-dbaa-4ce3-8681-06cb95e5dba6/id-preview-79c07c9a--215523d0-c1d3-46b6-92bf-63e239dbc58e.lovable.app-1778635135697.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/ece204a8-dbaa-4ce3-8681-06cb95e5dba6/id-preview-79c07c9a--215523d0-c1d3-46b6-92bf-63e239dbc58e.lovable.app-1778635135697.png" },
     ],
     links: [
       {
