@@ -89,7 +89,9 @@ function toIso(ts: any): string | null {
 }
 
 export async function syncList(authUserId: string, supabase: any, listId: string) {
+  console.log("[syncList] start. listId=", listId, "authUserId=", authUserId);
   const userId = await getAppUserId(supabase, authUserId);
+  console.log("[syncList] resolved app userId=", userId);
 
   const { data: tok, error: tokErr } = await supabaseAdmin
     .from("clickup_tokens")
@@ -97,6 +99,7 @@ export async function syncList(authUserId: string, supabase: any, listId: string
     .eq("user_id", userId)
     .maybeSingle();
   if (tokErr) throw new Error(tokErr.message);
+  console.log("[syncList] token present?", !!tok);
   if (!tok) throw new Error("ClickUp not connected. Click Connect ClickUp in the header.");
 
   const accessToken = decryptToken(tok.access_token);
@@ -106,15 +109,19 @@ export async function syncList(authUserId: string, supabase: any, listId: string
   for (let page = 0; page < 20; page++) {
     const url = `https://api.clickup.com/api/v2/list/${encodeURIComponent(listId)}/task?include_closed=true&page=${page}`;
     const r = await fetch(url, { headers: auth });
+    console.log(`[syncList] GET list/${listId}/task page=${page} status=${r.status}`);
     if (!r.ok) {
       const t = await r.text();
+      console.error("[syncList] list fetch error body:", t.slice(0, 500));
       throw new Error(`ClickUp list fetch failed (${r.status}): ${t.slice(0, 200)}`);
     }
     const j = (await r.json()) as { tasks?: any[] };
     const batch = j.tasks ?? [];
+    console.log(`[syncList] page=${page} returned ${batch.length} tasks`);
     tasks.push(...batch);
     if (batch.length < 100) break;
   }
+  console.log("[syncList] total tasks fetched:", tasks.length);
 
   const folderIds = Array.from(new Set(tasks.map((t) => t?.folder?.id).filter(Boolean)));
   const companyByFolder = new Map<string, string>();
