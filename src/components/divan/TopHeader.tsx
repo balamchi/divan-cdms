@@ -1,4 +1,4 @@
-import { LogOut } from "lucide-react";
+import { Bell, LogOut } from "lucide-react";
 import { DivanLogo } from "./DivanLogo";
 import type { Role } from "@/lib/roles";
 import { ROLE_THEME } from "@/lib/roles";
