@@ -206,9 +206,10 @@ function PortalDashboard() {
                       {t.subject}
                     </span>
                     <span className="text-[11px] text-text-secondary shrink-0">
-                      {new Date(t.publishDate).toLocaleDateString("en-CA", {
+                      {new Date(t.publishDate).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
+                        timeZone: "UTC",
                       })}
                     </span>
                   </li>
