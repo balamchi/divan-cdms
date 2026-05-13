@@ -14,7 +14,8 @@ import { Sidebar, type NavItem } from "@/components/divan/Sidebar";
 import { MetricCard } from "@/components/divan/MetricCard";
 import { TaskCard } from "@/components/divan/TaskCard";
 import { AppFooter } from "@/components/divan/AppFooter";
-import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { getPortalTasks } from "@/lib/clickup.functions";
 import { useAuth } from "@/lib/auth";
 import {
   COMPANIES,
@@ -49,48 +50,52 @@ function PortalDashboard() {
     [company.id],
   );
   const [tasks, setTasks] = useState<Task[]>(companyTasks);
-  const [loadedReal, setLoadedReal] = useState(false);
+  const fetchPortalTasks = useServerFn(getPortalTasks);
 
-  // For Vivia Riu only: replace mock with real cached ClickUp tasks if any exist.
+  // Effective company id: real auth user's company, or Vivia for demo "As Vivi".
+  const effectiveCompanyId = user?.company_id ?? VIVIA_COMPANY_UUID;
+
   useEffect(() => {
-    const isVivia = user?.company_id === VIVIA_COMPANY_UUID;
-    if (!isVivia) return;
+    if (effectiveCompanyId !== VIVIA_COMPANY_UUID) return;
     let cancelled = false;
     (async () => {
-      const { data, error } = await supabase
-        .from("clickup_tasks_cache")
-        .select("task_id, subject, name, description, kind, status, publish_date, assignees")
-        .eq("company_id", VIVIA_COMPANY_UUID);
-      if (cancelled) return;
-      if (error || !data) return;
-      const mapped: Task[] = data.map((r) => ({
-        id: r.task_id,
-        companyId: company.id,
-        subject: r.subject || r.name || "(untitled)",
-        description: r.description || "",
-        kind: (r.kind as TaskKind) || "Publish Plan",
-        status: (r.status as TaskStatus) || "to do",
-        publishDate: r.publish_date || new Date().toISOString(),
-        assignees: Array.isArray(r.assignees)
-          ? (r.assignees as any[])
-              .map((a) => a?.username || a?.email || "")
-              .filter(Boolean)
-          : [],
-      }));
-      // Always switch to real data once we've loaded it (even if empty).
-      setTasks(mapped);
-      setLoadedReal(true);
+      try {
+        const { tasks: rows } = await fetchPortalTasks({
+          data: { company_id: VIVIA_COMPANY_UUID },
+        });
+        if (cancelled || !rows) return;
+        const mapped: Task[] = rows.map((r: any) => ({
+          id: r.task_id,
+          companyId: company.id,
+          subject: r.subject || r.name || "(untitled)",
+          description: r.description || "",
+          kind: (r.kind as TaskKind) || "Publish Plan",
+          status: (r.status as TaskStatus) || "to do",
+          publishDate: r.publish_date || new Date().toISOString(),
+          assignees: Array.isArray(r.assignees)
+            ? (r.assignees as any[]).map((a) => a?.username || a?.email || "").filter(Boolean)
+            : [],
+        }));
+        setTasks(mapped);
+      } catch (e) {
+        console.error("portal load failed", e);
+      }
     })();
     return () => {
       cancelled = true;
     };
-  }, [user?.company_id, company.id]);
-  void loadedReal;
+  }, [effectiveCompanyId, company.id, fetchPortalTasks]);
 
   const awaiting = tasks.filter((t) => t.status === "Client Review");
-  const scheduled = tasks.filter((t) => t.status === "Approved");
+  const scheduledStatuses = new Set(["Approved", "complete", "to do", "in progress"]);
+  const weekFromNow = Date.now() + 7 * 86400000;
+  const scheduled = tasks.filter((t) => {
+    if (!scheduledStatuses.has(t.status)) return false;
+    const ts = +new Date(t.publishDate);
+    return ts >= Date.now() && ts <= weekFromNow;
+  });
   const upcoming = [...tasks]
-    .filter((t) => new Date(t.publishDate) >= new Date(Date.now() - 86400000))
+    .filter((t) => +new Date(t.publishDate) >= Date.now())
     .sort((a, b) => +new Date(a.publishDate) - +new Date(b.publishDate))
     .slice(0, 4);
 
@@ -201,9 +206,10 @@ function PortalDashboard() {
                       {t.subject}
                     </span>
                     <span className="text-[11px] text-text-secondary shrink-0">
-                      {new Date(t.publishDate).toLocaleDateString("en-CA", {
+                      {new Date(t.publishDate).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
+                        timeZone: "UTC",
                       })}
                     </span>
                   </li>
