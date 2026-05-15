@@ -5,19 +5,19 @@ export const ROLE_THEME: Record<
   { headerBg: string; accent: string; label: string; route: string }
 > = {
   client: {
-    headerBg: "var(--teal)",
+    headerBg: "var(--background)",
     accent: "var(--teal)",
     label: "Client portal",
     route: "/portal",
   },
   team: {
-    headerBg: "var(--magenta)",
+    headerBg: "var(--background)",
     accent: "var(--magenta)",
     label: "Team workspace",
     route: "/workspace",
   },
   admin: {
-    headerBg: "var(--charcoal)",
+    headerBg: "var(--background)",
     accent: "var(--magenta)",
     label: "Founder console",
     route: "/console",

@@ -58,22 +58,20 @@ export function MetricCard({
         borderRadius: "12px",
         border: "0.5px solid var(--border)",
         padding: "20px 24px",
-        boxShadow:
-          t === "negative"
-            ? "inset 0 0 0 2px color-mix(in oklab, var(--danger) 20%, transparent)"
-            : undefined,
       }}
     >
       {/* Top accent line — always category color */}
       <div
         aria-hidden
+        className="dark:opacity-40"
         style={{
           position: "absolute",
           top: 0,
           left: 0,
           right: 0,
-          height: "4px",
+          height: "1px",
           background: accentColor,
+          opacity: 0.6,
         }}
       />
       <div

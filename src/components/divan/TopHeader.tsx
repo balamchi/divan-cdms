@@ -83,10 +83,9 @@ export function TopHeader({ role, userName, initials, unread = 0 }: TopHeaderPro
 
   return (
     <header
-      className="sticky top-0 z-40 w-full border-b border-white/10 flex items-center justify-between"
+      className="sticky top-0 z-40 w-full border-b border-border flex items-center justify-between"
       style={{
         background: theme.headerBg,
-        color: "white",
         padding: "12px 20px",
       }}
     >
@@ -98,7 +97,7 @@ export function TopHeader({ role, userName, initials, unread = 0 }: TopHeaderPro
         <button
           type="button"
           aria-label="Notifications"
-          className="relative h-8 w-8 grid place-items-center rounded-md hover:bg-white/10 transition-colors"
+          className="relative h-8 w-8 grid place-items-center rounded-md hover:bg-accent transition-colors"
         >
           <Bell size={18} strokeWidth={1.6} />
           {unread > 0 && (
@@ -115,16 +114,16 @@ export function TopHeader({ role, userName, initials, unread = 0 }: TopHeaderPro
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex items-center gap-2 h-8 pl-1.5 pr-1 rounded-md hover:bg-white/10 transition-colors outline-none"
+              className="flex items-center gap-2 h-8 pl-1.5 pr-1 rounded-md hover:bg-accent transition-colors outline-none"
               aria-label="Account menu"
             >
               <div
-                className="rounded-full bg-white/15 ring-1 ring-white/20 grid place-items-center font-medium"
+                className="rounded-full bg-accent ring-1 ring-border grid place-items-center font-medium"
                 style={{ height: "32px", width: "32px", fontSize: "12px" }}
               >
                 {displayInitials}
               </div>
-              <ChevronDown className="h-3.5 w-3.5 text-white/70" strokeWidth={1.8} />
+              <ChevronDown className="h-3.5 w-3.5 text-text-secondary" strokeWidth={1.8} />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-60">
