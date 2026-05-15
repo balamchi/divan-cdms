@@ -178,8 +178,32 @@ function PortalDashboard() {
               </span>
             </div>
             {awaiting.length === 0 ? (
-              <div className="rounded-xl border border-border bg-card p-8 text-center text-[13px] text-text-secondary">
-                All caught up! No items need your review.
+              <div
+                className="rounded-xl border border-border bg-card flex flex-col items-center text-center"
+                style={{ padding: "48px 24px" }}
+              >
+                <CheckCircle2
+                  size={64}
+                  strokeWidth={1.4}
+                  style={{ color: "var(--text-muted)", opacity: 0.5 }}
+                />
+                <h3
+                  className="font-medium"
+                  style={{ fontSize: "16px", marginTop: "12px", color: "var(--text-primary)" }}
+                >
+                  All caught up
+                </h3>
+                <p
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: 400,
+                    color: "var(--text-secondary)",
+                    maxWidth: "280px",
+                    marginTop: "4px",
+                  }}
+                >
+                  No items need your review right now. We'll let you know when something's ready.
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
