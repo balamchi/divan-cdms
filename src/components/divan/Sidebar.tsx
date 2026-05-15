@@ -15,15 +15,23 @@ interface SidebarProps {
   role: Role;
   items: NavItem[];
   footer?: React.ReactNode;
+  /** Optional override; defaults to the role's accent. */
+  accentColor?: "teal" | "magenta" | "charcoal";
 }
 
-export function Sidebar({ role, items, footer }: SidebarProps) {
-  const accent = ROLE_THEME[role].accent;
+const ACCENT_VAR: Record<NonNullable<SidebarProps["accentColor"]>, string> = {
+  teal: "var(--teal)",
+  magenta: "var(--magenta)",
+  charcoal: "var(--charcoal)",
+};
+
+export function Sidebar({ role, items, footer, accentColor }: SidebarProps) {
+  const accent = accentColor ? ACCENT_VAR[accentColor] : ROLE_THEME[role].accent;
   const location = useLocation();
   return (
     <aside
       className="hidden md:flex shrink-0 w-[220px] flex-col border-r border-border"
-      style={{ background: "#F1EFE8" }}
+      style={{ background: "var(--surface-warm)" }}
     >
       <nav className="flex-1 py-4">
         {items.map((item) => {
@@ -31,19 +39,33 @@ export function Sidebar({ role, items, footer }: SidebarProps) {
           const Icon = item.icon;
           return (
             <Link
-              key={item.route}
+              key={`${item.route}-${item.label}`}
               to={item.route}
               className={cn(
-                "group flex items-center gap-3 px-5 py-2 text-[13px] text-text-primary/80 hover:text-text-primary transition-colors relative",
+                "group relative flex items-center gap-3 py-2 pr-4 text-[14px] font-normal transition-colors",
               )}
-              style={
-                active
-                  ? { color: accent, fontWeight: 500, boxShadow: `inset 2px 0 0 0 ${accent}` }
-                  : undefined
-              }
+              style={{
+                paddingLeft: "12px",
+                color: active ? accent : "var(--text-primary)",
+                background: active
+                  ? `color-mix(in oklab, ${accent} 5%, transparent)`
+                  : undefined,
+                fontWeight: active ? 500 : 400,
+              }}
             >
-              <Icon className="h-4 w-4" strokeWidth={1.6} />
-              <span className="flex-1">{item.label}</span>
+              {/* Accent bar */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute left-0 top-0 bottom-0 transition-all duration-[250ms] ease-in-out group-hover:translate-x-0 group-hover:opacity-60"
+                style={{
+                  width: "4px",
+                  background: accent,
+                  opacity: active ? 1 : 0,
+                  transform: active ? "translateX(0)" : "translateX(-100%)",
+                }}
+              />
+              <Icon size={20} strokeWidth={1.6} />
+              <span className="flex-1 truncate">{item.label}</span>
               {item.badgeCount ? (
                 <span
                   className="h-5 min-w-[20px] px-1.5 rounded-full text-[10px] grid place-items-center text-white font-medium"
