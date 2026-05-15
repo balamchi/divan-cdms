@@ -31,7 +31,7 @@ export function Sidebar({ role, items, footer, accentColor }: SidebarProps) {
   return (
     <aside
       className="hidden md:flex shrink-0 w-[220px] flex-col border-r border-border"
-      style={{ background: "var(--surface-warm)" }}
+      style={{ background: "var(--background)" }}
     >
       <nav className="flex-1 py-4">
         {items.map((item) => {
