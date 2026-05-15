@@ -145,35 +145,53 @@
 }
 
 .dark {
-  --background: #0e0e0e;
-  --foreground: #f5f5f4;
-  --card: #1a1a1a;
-  --card-foreground: #f5f5f4;
-  --popover: #1a1a1a;
-  --popover-foreground: #f5f5f4;
-  --primary: #2a9bbe;
-  --primary-foreground: #0e0e0e;
-  --secondary: #232323;
-  --secondary-foreground: #f5f5f4;
-  --muted: #232323;
-  --muted-foreground: #a1a1aa;
-  --accent: #232323;
-  --accent-foreground: #f5f5f4;
-  --destructive: #c23a3a;
-  --destructive-foreground: #f5f5f4;
-  --border: rgba(255, 255, 255, 0.08);
-  --input: rgba(255, 255, 255, 0.12);
-  --ring: #2a9bbe;
+  --background: #0f0f0e;
+  --foreground: #f5f4f0;
+  --card: #1a1a19;
+  --card-foreground: #f5f4f0;
+  --popover: #242422;
+  --popover-foreground: #f5f4f0;
+  --primary: #0b6b8c;
+  --primary-foreground: #ffffff;
+  --secondary: #1a1a19;
+  --secondary-foreground: #f5f4f0;
+  --muted: #242422;
+  --muted-foreground: #a8a6a0;
+  --accent: #242422;
+  --accent-foreground: #f5f4f0;
+  --destructive: #e24b4a;
+  --destructive-foreground: #ffffff;
+  --border: #2c2c2a;
+  --input: rgba(255, 255, 255, 0.10);
+  --ring: #1fa8da;
 
-  --teal: #2a9bbe;
+  --teal: #0b6b8c;
   --teal-soft: #102a33;
-  --magenta: #b04a9a;
+  --teal-glow: #1fa8da;
+  --magenta: #6b1e5c;
   --magenta-soft: #2a1626;
-  --charcoal: #1a1a1a;
-  --surface: #1a1a1a;
-  --surface-warm: #1f1f1f;
-  --text-primary: #f5f5f4;
-  --text-secondary: #a1a1aa;
+  --magenta-glow: #c2479f;
+  --charcoal: #2c2c2a;
+  --surface: #1a1a19;
+  --surface-warm: #242422;
+  --surface-elevated: #2c2c2a;
+  --text-primary: #f5f4f0;
+  --text-secondary: #a8a6a0;
+  --text-muted: #6b6b66;
+  --success: #1fb372;
+  --warning: #f5a623;
+  --danger: #e24b4a;
+
+  --status-todo-bg: rgba(168, 166, 160, 0.15);
+  --status-todo-fg: #a8a6a0;
+  --status-progress-bg: rgba(31, 168, 218, 0.15);
+  --status-progress-fg: #1fa8da;
+  --status-review-bg: rgba(245, 166, 35, 0.15);
+  --status-review-fg: #f5a623;
+  --status-approved-bg: rgba(31, 179, 114, 0.15);
+  --status-approved-fg: #1fb372;
+  --status-complete-bg: rgba(108, 107, 102, 0.15);
+  --status-complete-fg: #a8a6a0;
 }
 
 @layer base {
