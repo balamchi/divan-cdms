@@ -78,6 +78,20 @@
   --color-tile-green: #e1f5ee;
   --color-tile-amber: #faeeda;
   --color-tile-purple: #efe7f5;
+
+  /* Glow variants for dark mode highlights */
+  --color-teal-glow: var(--teal-glow);
+  --color-magenta-glow: var(--magenta-glow);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-text-muted: var(--text-muted);
+
+  /* Motion timing tokens — locked per brief */
+  --motion-fast: 150ms;
+  --motion-medium: 250ms;
+  --motion-slow: 400ms;
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-expressive: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 :root {
