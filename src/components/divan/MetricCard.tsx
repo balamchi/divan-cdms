@@ -1,46 +1,153 @@
+import { ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+export type MetricTrend = "positive" | "negative" | "neutral" | "loading";
 
 interface MetricCardProps {
   label: string;
   value: string | number;
   delta?: string;
+  /** Legacy tone — mapped to `trend` when `trend` is not provided. */
   deltaTone?: "success" | "danger" | "warning" | "neutral";
+  /** Top accent line color — stays in role/category color regardless of trend. */
   accentColor?: string;
+  trend?: MetricTrend;
   className?: string;
+}
+
+function deriveTrend(deltaTone?: MetricCardProps["deltaTone"]): MetricTrend {
+  if (deltaTone === "success") return "positive";
+  if (deltaTone === "danger") return "negative";
+  return "neutral";
 }
 
 export function MetricCard({
   label,
   value,
   delta,
-  deltaTone = "success",
-  accentColor,
+  deltaTone,
+  accentColor = "var(--teal)",
+  trend,
   className,
 }: MetricCardProps) {
-  const deltaColor =
-    deltaTone === "success"
+  const t: MetricTrend = trend ?? deriveTrend(deltaTone);
+
+  const numberColor =
+    t === "positive"
       ? "var(--success)"
-      : deltaTone === "danger"
+      : t === "negative"
         ? "var(--danger)"
-        : deltaTone === "warning"
-          ? "var(--warning)"
+        : t === "neutral"
+          ? "var(--text-secondary)"
+          : "var(--text-primary)";
+
+  const deltaColor =
+    deltaTone === "danger"
+      ? "var(--danger)"
+      : deltaTone === "warning"
+        ? "var(--warning)"
+        : deltaTone === "success"
+          ? "var(--success)"
           : "var(--text-secondary)";
+
   return (
     <div
-      className={cn("rounded-md p-3.5 flex flex-col gap-1.5", className)}
-      style={{ background: "#F1EFE8" }}
+      className={cn("relative overflow-hidden", className)}
+      style={{
+        background: "var(--card)",
+        borderRadius: "12px",
+        border: "0.5px solid var(--border)",
+        padding: "20px 24px",
+        boxShadow:
+          t === "negative"
+            ? "inset 0 0 0 2px color-mix(in oklab, var(--danger) 20%, transparent)"
+            : undefined,
+      }}
     >
-      <span className="text-[11px] text-text-secondary">{label}</span>
-      <span
-        className="text-[24px] leading-none font-medium"
-        style={{ color: accentColor || "var(--text-primary)" }}
+      {/* Top accent line — always category color */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "4px",
+          background: accentColor,
+        }}
+      />
+      <div
+        className="uppercase font-medium"
+        style={{
+          color: "var(--text-secondary)",
+          fontSize: "11px",
+          letterSpacing: "0.073em",
+          marginBottom: "8px",
+        }}
       >
-        {value}
-      </span>
-      {delta ? (
-        <span className="text-[11px] font-medium" style={{ color: deltaColor }}>
+        {label}
+      </div>
+
+      {t === "loading" ? (
+        <div
+          className="animate-pulse"
+          style={{
+            width: "40px",
+            height: "48px",
+            borderRadius: "6px",
+            background: "color-mix(in oklab, var(--text-secondary) 20%, transparent)",
+          }}
+        />
+      ) : (
+        <div className="flex items-baseline gap-2">
+          {t === "positive" && (
+            <ArrowUp
+              className="dark:hidden"
+              style={{ color: numberColor, opacity: 0.6 }}
+              size={20}
+              strokeWidth={1.6}
+            />
+          )}
+          {t === "positive" && (
+            <ArrowUp
+              className="hidden dark:inline-block"
+              style={{ color: numberColor, opacity: 0.6 }}
+              size={24}
+              strokeWidth={1.6}
+            />
+          )}
+          {t === "negative" && (
+            <>
+              <ArrowDown
+                className="dark:hidden"
+                style={{ color: numberColor, opacity: 0.6 }}
+                size={20}
+                strokeWidth={1.6}
+              />
+              <ArrowDown
+                className="hidden dark:inline-block"
+                style={{ color: numberColor, opacity: 0.6 }}
+                size={24}
+                strokeWidth={1.6}
+              />
+            </>
+          )}
+          <span
+            className="text-[40px] dark:text-[48px] font-medium leading-none"
+            style={{ color: numberColor, letterSpacing: "-0.5px" }}
+          >
+            {t === "neutral" && typeof value === "number" ? `— ${value}` : value}
+          </span>
+        </div>
+      )}
+
+      {delta && t !== "loading" ? (
+        <div
+          className="mt-2 font-medium"
+          style={{ fontSize: "11px", color: deltaColor }}
+        >
           {delta}
-        </span>
+        </div>
       ) : null}
     </div>
   );
