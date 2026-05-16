@@ -122,7 +122,7 @@ export function TopHeader({ role, userName, initials, unread = 0 }: TopHeaderPro
               >
                 {displayInitials}
               </div>
-              <ChevronDown className="h-3.5 w-3.5 text-text-secondary" strokeWidth={1.8} />
+              <ChevronDown className="h-3.5 w-3.5 text-text-secondary opacity-0 group-hover:opacity-100 transition-opacity" strokeWidth={1.8} />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-60">
