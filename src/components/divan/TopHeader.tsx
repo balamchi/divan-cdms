@@ -83,14 +83,13 @@ export function TopHeader({ role, userName, initials, unread = 0 }: TopHeaderPro
 
   return (
     <header
-      className="sticky top-0 z-40 w-full border-b border-border flex items-center justify-between"
+      className="sticky top-0 z-40 w-full flex items-center justify-between bg-background"
       style={{
-        background: theme.headerBg,
         padding: "12px 20px",
       }}
     >
       <div className="flex items-center gap-3">
-        <DivanLogo variant="light" size="sm" />
+        <DivanLogo variant="dark" size="sm" />
       </div>
       <div className="flex items-center gap-2 md:gap-3">
         {!authed && <RoleSwitcher current={role} />}
@@ -114,7 +113,7 @@ export function TopHeader({ role, userName, initials, unread = 0 }: TopHeaderPro
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex items-center gap-2 h-8 pl-1.5 pr-1 rounded-md hover:bg-accent transition-colors outline-none"
+              className="group flex items-center gap-2 h-8 pl-1.5 pr-1 rounded-md hover:bg-accent transition-colors outline-none"
               aria-label="Account menu"
             >
               <div
@@ -123,7 +122,7 @@ export function TopHeader({ role, userName, initials, unread = 0 }: TopHeaderPro
               >
                 {displayInitials}
               </div>
-              <ChevronDown className="h-3.5 w-3.5 text-text-secondary" strokeWidth={1.8} />
+              <ChevronDown className="h-3.5 w-3.5 text-text-secondary opacity-0 group-hover:opacity-100 transition-opacity" strokeWidth={1.8} />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-60">
