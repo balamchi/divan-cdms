@@ -219,4 +219,59 @@
   .font-persian {
     font-family: var(--font-persian);
   }
+
+  /* Apple-style type scale */
+  .type-h1 {
+    font-size: 40px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.07;
+    color: var(--foreground);
+  }
+  @media (min-width: 768px) {
+    .type-h1 { font-size: 56px; }
+  }
+  .type-h2 {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--foreground);
+  }
+  @media (min-width: 768px) {
+    .type-h2 { font-size: 32px; }
+  }
+  .type-h3 {
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    color: var(--foreground);
+  }
+  .type-body {
+    font-size: 17px;
+    font-weight: 400;
+    line-height: 1.47;
+    color: var(--text-secondary);
+  }
+  .type-meta {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+  .type-display {
+    font-size: 48px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    color: var(--foreground);
+    line-height: 1;
+  }
+  @media (min-width: 768px) {
+    .type-display { font-size: 64px; }
+  }
+  .type-eyebrow {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
 }
