@@ -70,15 +70,14 @@ function LandingPage() {
 
       {/* HERO */}
       <section className="dl-hero">
-        <span className="dl-pill dl-pill-purple">● THE SYSTEM BEHIND THE PROMISE</span>
-        <h1 className="dl-h1">This is how 287 checkpoints actually happen.</h1>
+        <h1 className="dl-h1">The System Behind the Promise</h1>
         <p className="dl-sub">
           Every Divan engagement is run through CDMS — the operating system
           we built to manage marketing projects with zero surprises and
           predictable excellence.
         </p>
         <p className="dl-caption" style={{ marginTop: 28 }}>
-          COMPREHENSIVE DIGITAL MARKETING SYSTEM · DIVAN GROUP · TORONTO 2026
+          COMPREHENSIVE DIGITAL MARKETING SYSTEM · DIVAN GROUP
         </p>
         <a href="#the-system" className="dl-cta">
           See it in action →
