@@ -43,6 +43,7 @@ const TILES = [
 ];
 
 function WorkspaceMyDay() {
+  useRequireAuth();
   const navItems: NavItem[] = [
     { icon: Home, label: "My day", route: "/workspace" },
     { icon: Clock, label: "Timesheet", route: "/workspace" },
