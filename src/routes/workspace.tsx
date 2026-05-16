@@ -19,6 +19,7 @@ import { Sidebar, type NavItem } from "@/components/divan/Sidebar";
 import { TaskCard } from "@/components/divan/TaskCard";
 import { AppFooter } from "@/components/divan/AppFooter";
 import { COMPANIES, TODAY_TASKS_FOR_TEAM } from "@/lib/mock-data";
+import { useRequireAuth } from "@/lib/require-auth";
 
 export const Route = createFileRoute("/workspace")({
   component: WorkspaceMyDay,
