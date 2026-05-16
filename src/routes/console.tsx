@@ -36,6 +36,7 @@ const LEAD_STAGES = [
 ];
 
 function AdminConsole() {
+  useRequireAuth();
   const activeRetainers = COMPANIES.filter(() => true).length;
   const [syncing, setSyncing] = useState(false);
   const sync = useServerFn(syncClickUpList);
