@@ -77,7 +77,7 @@ function LandingPage() {
           predictable excellence.
         </p>
         <p className="dl-caption" style={{ marginTop: 28 }}>
-          COMPREHENSIVE DIGITAL MARKETING SYSTEM · DIVAN GROUP · TORONTO 2026
+          COMPREHENSIVE DIGITAL MARKETING SYSTEM · DIVAN GROUP
         </p>
         <a href="#the-system" className="dl-cta">
           See it in action →
