@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import {
   Home,
   Clock,
@@ -34,10 +35,10 @@ export const Route = createFileRoute("/workspace")({
 });
 
 const TILES = [
-  { label: "Generate caption", desc: "Claude Haiku · brand voice", bg: "var(--color-tile-blue)", Icon: MessageSquare },
-  { label: "Reply to DM", desc: "Drafts in your tone", bg: "var(--color-tile-pink)", Icon: MessageSquare },
-  { label: "Translate FA ↔ EN", desc: "Persian ↔ English", bg: "var(--color-tile-green)", Icon: Languages },
-  { label: "Upload from phone", desc: "QR to attach assets", bg: "var(--color-tile-amber)", Icon: Camera },
+  { label: "Generate caption", desc: "Claude Haiku · brand voice", Icon: MessageSquare },
+  { label: "Reply to DM", desc: "Drafts in your tone", Icon: MessageSquare },
+  { label: "Translate FA ↔ EN", desc: "Persian ↔ English", Icon: Languages },
+  { label: "Upload from phone", desc: "QR to attach assets", Icon: Camera },
 ];
 
 function WorkspaceMyDay() {
@@ -70,14 +71,26 @@ function WorkspaceMyDay() {
     ),
   );
 
+  // Avoid SSR/client date mismatch by computing client-only after mount.
+  const [briefDate, setBriefDate] = useState("");
+  useEffect(() => {
+    setBriefDate(
+      new Date().toLocaleDateString("en-CA", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      }),
+    );
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col">
       <TopHeader role="team" userName="Rahil Nemati" initials="RN" unread={3} />
       <div className="flex flex-1">
         {/* Custom sidebar with collapsible Spaces (still uses Sidebar wrapper for footer items) */}
         <aside
-          className="hidden md:flex shrink-0 w-[240px] flex-col border-r border-border"
-          style={{ background: "#F1EFE8" }}
+          className="hidden md:flex shrink-0 w-[240px] flex-col"
+          style={{ background: "var(--background)" }}
         >
           <div className="px-5 py-4">
             <p className="text-[10px] uppercase tracking-wider text-text-secondary mb-2">
@@ -90,7 +103,8 @@ function WorkspaceMyDay() {
                   <li key={s.name}>
                     <button
                       type="button"
-                      className="w-full flex items-center gap-2 py-1.5 text-[13px] text-text-primary"
+                      className="w-full flex items-center gap-2 py-1.5 text-[13px]"
+                      style={{ color: "var(--text-secondary)" }}
                     >
                       <ChevronDown
                         className={`h-3 w-3 transition-transform ${
@@ -98,7 +112,7 @@ function WorkspaceMyDay() {
                         }`}
                         strokeWidth={1.5}
                       />
-                      <Icon className="h-4 w-4 text-text-secondary" strokeWidth={1.5} />
+                      <Icon className="h-4 w-4" strokeWidth={1.5} />
                       <span>{s.name}</span>
                     </button>
                     {s.expanded && s.children.length > 0 && (
@@ -106,7 +120,8 @@ function WorkspaceMyDay() {
                         {s.children.map((c) => (
                           <li
                             key={c}
-                            className="text-[12px] text-text-secondary py-1 cursor-pointer hover:text-text-primary"
+                            className="text-[12px] py-1 cursor-pointer hover:text-text-primary"
+                            style={{ color: "var(--text-muted)" }}
                           >
                             {c}
                           </li>
@@ -125,18 +140,15 @@ function WorkspaceMyDay() {
             <ul className="space-y-0.5">
               {navItems.map((n) => {
                 const Icon = n.icon;
+                const active = n.label === "My day";
                 return (
                   <li
                     key={n.label}
-                    className="flex items-center gap-2 text-[13px] py-1.5 cursor-pointer text-text-primary"
-                    style={
-                      n.label === "My day"
-                        ? {
-                            color: "var(--magenta)",
-                            fontWeight: 500,
-                          }
-                        : undefined
-                    }
+                    className="flex items-center gap-2 text-[13px] py-1.5 cursor-pointer"
+                    style={{
+                      color: active ? "var(--foreground)" : "var(--text-secondary)",
+                      fontWeight: active ? 500 : 400,
+                    }}
                   >
                     <Icon className="h-4 w-4" strokeWidth={1.5} />
                     {n.label}
@@ -155,22 +167,21 @@ function WorkspaceMyDay() {
           {/* Morning brief */}
           <div
             className="rounded-xl p-5 mb-8 flex gap-4"
-            style={{ background: "var(--magenta-soft)" }}
+            style={{
+              background: "var(--background)",
+              borderTop: "1px solid var(--border)",
+            }}
           >
             <div
               className="h-9 w-9 rounded-md grid place-items-center shrink-0"
-              style={{ background: "white", color: "var(--magenta)" }}
+              style={{ background: "var(--secondary)", color: "var(--text-secondary)" }}
             >
               <Sparkles className="h-4 w-4" strokeWidth={1.5} />
             </div>
             <div className="text-[13px] text-text-primary leading-relaxed">
               <span className="font-medium">Morning brief · </span>
               <span className="text-text-secondary">
-                {new Date().toLocaleDateString("en-CA", {
-                  weekday: "long",
-                  month: "long",
-                  day: "numeric",
-                })}
+                {briefDate}
               </span>
               <p className="mt-1">
                 You have {todayCount} tasks due today across{" "}
@@ -214,12 +225,24 @@ function WorkspaceMyDay() {
                     <button
                       key={tile.label}
                       type="button"
-                      className="w-full text-left rounded-xl p-4 flex items-center gap-3 transition-transform hover:-translate-y-0.5"
-                      style={{ background: tile.bg }}
+                      className="w-full text-left rounded-xl p-4 flex items-center gap-3 transition-colors hover:bg-secondary"
+                      style={{
+                        background: "var(--background)",
+                        border: "1px solid var(--border)",
+                      }}
                     >
-                      <div className="h-9 w-9 rounded-md bg-white grid place-items-center">
+                      <div
+                        className="grid place-items-center shrink-0"
+                        style={{
+                          width: "32px",
+                          height: "32px",
+                          borderRadius: "6px",
+                          background: "var(--secondary)",
+                        }}
+                      >
                         <Icon
-                          className="h-4 w-4 text-text-primary"
+                          className="h-4 w-4"
+                          style={{ color: "var(--text-secondary)" }}
                           strokeWidth={1.5}
                         />
                       </div>
