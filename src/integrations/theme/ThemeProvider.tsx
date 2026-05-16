@@ -22,8 +22,8 @@ const STORAGE_KEY = "divan-cdms-theme";
 
 const ROLE_DEFAULT: Record<Role, ThemeMode> = {
   client: "light",
-  team: "dark",
-  admin: "dark",
+  team: "light",
+  admin: "light",
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
