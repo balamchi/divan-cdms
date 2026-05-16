@@ -17,6 +17,7 @@ import { AppFooter } from "@/components/divan/AppFooter";
 import { useServerFn } from "@tanstack/react-start";
 import { getPortalTasks } from "@/lib/clickup.functions";
 import { useAuth } from "@/lib/auth";
+import { useRequireAuth } from "@/lib/require-auth";
 import {
   COMPANIES,
   TASKS,
