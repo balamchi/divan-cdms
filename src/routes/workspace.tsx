@@ -19,6 +19,7 @@ import { Sidebar, type NavItem } from "@/components/divan/Sidebar";
 import { TaskCard } from "@/components/divan/TaskCard";
 import { AppFooter } from "@/components/divan/AppFooter";
 import { COMPANIES, TODAY_TASKS_FOR_TEAM } from "@/lib/mock-data";
+import { useRequireAuth } from "@/lib/require-auth";
 
 export const Route = createFileRoute("/workspace")({
   component: WorkspaceMyDay,
@@ -42,6 +43,7 @@ const TILES = [
 ];
 
 function WorkspaceMyDay() {
+  useRequireAuth();
   const navItems: NavItem[] = [
     { icon: Home, label: "My day", route: "/workspace" },
     { icon: Clock, label: "Timesheet", route: "/workspace" },

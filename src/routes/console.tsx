@@ -13,6 +13,7 @@ import { MetricCard } from "@/components/divan/MetricCard";
 import { AppFooter } from "@/components/divan/AppFooter";
 import { COMPANIES } from "@/lib/mock-data";
 import { useAuth } from "@/lib/auth";
+import { useRequireAuth } from "@/lib/require-auth";
 
 export const Route = createFileRoute("/console")({
   component: AdminConsole,
@@ -35,6 +36,7 @@ const LEAD_STAGES = [
 ];
 
 function AdminConsole() {
+  useRequireAuth();
   const activeRetainers = COMPANIES.filter(() => true).length;
   const [syncing, setSyncing] = useState(false);
   const sync = useServerFn(syncClickUpList);
