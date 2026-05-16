@@ -43,6 +43,7 @@ export const Route = createFileRoute("/portal")({
 });
 
 function PortalDashboard() {
+  useRequireAuth();
   const company = COMPANIES[0]; // Vivia Riu
   const { user } = useAuth();
   const companyTasks = useMemo(
