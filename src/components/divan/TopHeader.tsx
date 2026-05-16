@@ -83,14 +83,13 @@ export function TopHeader({ role, userName, initials, unread = 0 }: TopHeaderPro
 
   return (
     <header
-      className="sticky top-0 z-40 w-full border-b border-border flex items-center justify-between"
+      className="sticky top-0 z-40 w-full flex items-center justify-between bg-background"
       style={{
-        background: theme.headerBg,
         padding: "12px 20px",
       }}
     >
       <div className="flex items-center gap-3">
-        <DivanLogo variant="light" size="sm" />
+        <DivanLogo variant="dark" size="sm" />
       </div>
       <div className="flex items-center gap-2 md:gap-3">
         {!authed && <RoleSwitcher current={role} />}
