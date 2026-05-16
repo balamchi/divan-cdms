@@ -35,10 +35,10 @@ export const Route = createFileRoute("/workspace")({
 });
 
 const TILES = [
-  { label: "Generate caption", desc: "Claude Haiku · brand voice", bg: "var(--color-tile-blue)", Icon: MessageSquare },
-  { label: "Reply to DM", desc: "Drafts in your tone", bg: "var(--color-tile-pink)", Icon: MessageSquare },
-  { label: "Translate FA ↔ EN", desc: "Persian ↔ English", bg: "var(--color-tile-green)", Icon: Languages },
-  { label: "Upload from phone", desc: "QR to attach assets", bg: "var(--color-tile-amber)", Icon: Camera },
+  { label: "Generate caption", desc: "Claude Haiku · brand voice", Icon: MessageSquare },
+  { label: "Reply to DM", desc: "Drafts in your tone", Icon: MessageSquare },
+  { label: "Translate FA ↔ EN", desc: "Persian ↔ English", Icon: Languages },
+  { label: "Upload from phone", desc: "QR to attach assets", Icon: Camera },
 ];
 
 function WorkspaceMyDay() {
