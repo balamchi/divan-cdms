@@ -155,22 +155,21 @@ function WorkspaceMyDay() {
           {/* Morning brief */}
           <div
             className="rounded-xl p-5 mb-8 flex gap-4"
-            style={{ background: "var(--magenta-soft)" }}
+            style={{
+              background: "var(--background)",
+              borderTop: "1px solid var(--border)",
+            }}
           >
             <div
               className="h-9 w-9 rounded-md grid place-items-center shrink-0"
-              style={{ background: "white", color: "var(--magenta)" }}
+              style={{ background: "var(--secondary)", color: "var(--text-secondary)" }}
             >
               <Sparkles className="h-4 w-4" strokeWidth={1.5} />
             </div>
             <div className="text-[13px] text-text-primary leading-relaxed">
               <span className="font-medium">Morning brief · </span>
               <span className="text-text-secondary">
-                {new Date().toLocaleDateString("en-CA", {
-                  weekday: "long",
-                  month: "long",
-                  day: "numeric",
-                })}
+                {briefDate}
               </span>
               <p className="mt-1">
                 You have {todayCount} tasks due today across{" "}
@@ -214,12 +213,24 @@ function WorkspaceMyDay() {
                     <button
                       key={tile.label}
                       type="button"
-                      className="w-full text-left rounded-xl p-4 flex items-center gap-3 transition-transform hover:-translate-y-0.5"
-                      style={{ background: tile.bg }}
+                      className="w-full text-left rounded-xl p-4 flex items-center gap-3 transition-colors hover:bg-secondary"
+                      style={{
+                        background: "var(--background)",
+                        border: "1px solid var(--border)",
+                      }}
                     >
-                      <div className="h-9 w-9 rounded-md bg-white grid place-items-center">
+                      <div
+                        className="grid place-items-center shrink-0"
+                        style={{
+                          width: "32px",
+                          height: "32px",
+                          borderRadius: "6px",
+                          background: "var(--secondary)",
+                        }}
+                      >
                         <Icon
-                          className="h-4 w-4 text-text-primary"
+                          className="h-4 w-4"
+                          style={{ color: "var(--text-secondary)" }}
                           strokeWidth={1.5}
                         />
                       </div>
