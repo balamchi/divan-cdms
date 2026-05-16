@@ -71,6 +71,18 @@ function WorkspaceMyDay() {
     ),
   );
 
+  // Avoid SSR/client date mismatch by computing client-only after mount.
+  const [briefDate, setBriefDate] = useState("");
+  useEffect(() => {
+    setBriefDate(
+      new Date().toLocaleDateString("en-CA", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      }),
+    );
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col">
       <TopHeader role="team" userName="Rahil Nemati" initials="RN" unread={3} />
