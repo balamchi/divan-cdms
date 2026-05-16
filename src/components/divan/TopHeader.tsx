@@ -113,7 +113,7 @@ export function TopHeader({ role, userName, initials, unread = 0 }: TopHeaderPro
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex items-center gap-2 h-8 pl-1.5 pr-1 rounded-md hover:bg-accent transition-colors outline-none"
+              className="group flex items-center gap-2 h-8 pl-1.5 pr-1 rounded-md hover:bg-accent transition-colors outline-none"
               aria-label="Account menu"
             >
               <div
