@@ -104,10 +104,30 @@ function PortalDashboard() {
     .sort((a, b) => +new Date(a.publishDate) - +new Date(b.publishDate))
     .slice(0, 4);
 
-  const onApprove = (id: string) =>
-    setTasks((cur) => cur.map((t) => (t.id === id ? { ...t, status: "Approved" } : t)));
-  const onRequestChanges = (id: string) =>
+  const approve = useServerFn(createApproval);
+  const [pendingChanges, setPendingChanges] = useState<string | null>(null);
+
+  const onApprove = async (id: string) => {
+    setTasks((cur) => cur.map((t) => (t.id === id ? { ...t, status: "complete" } : t)));
+    try {
+      await approve({ data: { task_id: id, action: "approved" } });
+      toast.success("Approved");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Approve failed");
+    }
+  };
+  const onRequestChanges = (id: string) => setPendingChanges(id);
+  const submitChanges = async (note: string) => {
+    if (!pendingChanges) return;
+    const id = pendingChanges;
     setTasks((cur) => cur.map((t) => (t.id === id ? { ...t, status: "in progress" } : t)));
+    try {
+      await approve({ data: { task_id: id, action: "changes_requested", note } });
+      toast.success("Sent to the team");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not send");
+    }
+  };
 
   const navItems: NavItem[] = [
     { icon: Home, label: "Dashboard", route: "/portal" },
