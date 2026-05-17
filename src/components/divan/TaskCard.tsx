@@ -1,5 +1,6 @@
 import { FileText, Check } from "lucide-react";
 import type { Task } from "@/lib/mock-data";
+import { normalizeStatus } from "@/lib/utils";
 
 const fmt = (iso: string) =>
   new Date(iso).toLocaleDateString("en-US", {
