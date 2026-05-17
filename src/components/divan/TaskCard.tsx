@@ -39,8 +39,9 @@ export function TaskCard({
     (task.attachments && task.attachments.length > 0 ? task.attachments[0]?.url : undefined);
 
   const isReview = task.status === "Client Review";
-  const showPhase3Buttons = showApprovalButtons && task.status === "in progress";
-  const showCompletedPill = showApprovalButtons && task.status === "complete";
+  const norm = normalizeStatus(task.status);
+  const showPhase3Buttons = showApprovalButtons && norm === "in_progress";
+  const showCompletedPill = showApprovalButtons && norm === "approved_or_done";
 
   return (
     <div
