@@ -5,7 +5,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   syncClickUpList,
-  syncAllClickUpFolders,
+  syncOneFolder,
+  listActiveCompanies,
   getClickUpConnection,
   getClickUpAuthorizeUrl,
 } from "@/lib/clickup.functions";
@@ -41,8 +42,14 @@ function AdminConsole() {
   const activeRetainers = COMPANIES.filter(() => true).length;
   const [syncing, setSyncing] = useState(false);
   const [syncingAll, setSyncingAll] = useState(false);
+  const [syncProgress, setSyncProgress] = useState<{
+    current: number;
+    total: number;
+    currentFolder: string;
+  } | null>(null);
   const sync = useServerFn(syncClickUpList);
-  const syncAll = useServerFn(syncAllClickUpFolders);
+  const syncOneFolderFn = useServerFn(syncOneFolder);
+  const listCompaniesFn = useServerFn(listActiveCompanies);
   const fetchConn = useServerFn(getClickUpConnection);
   const fetchAuthorizeUrl = useServerFn(getClickUpAuthorizeUrl);
   const { session } = useAuth();
@@ -81,25 +88,33 @@ function AdminConsole() {
 
   const runSyncAll = async () => {
     setSyncingAll(true);
+    setSyncProgress({ current: 0, total: 0, currentFolder: "" });
     try {
-      const r = (await syncAll({})) as {
-        folders: number;
-        lists: number;
-        tasks: number;
-        errors: Array<{ folder: string; list?: string; error: string }>;
-      };
-      toast.success(
-        `Synced ${r.tasks} task${r.tasks === 1 ? "" : "s"} across ${r.folders} folder${
-          r.folders === 1 ? "" : "s"
-        }. ${r.errors.length} error${r.errors.length === 1 ? "" : "s"}.`,
-      );
-      if (r.errors.length > 0) {
-        console.error("[syncAll] errors:", r.errors);
+      const { companies } = await listCompaniesFn({});
+      setSyncProgress({ current: 0, total: companies.length, currentFolder: "" });
+      let totalTasks = 0;
+      let totalErrors = 0;
+      for (let i = 0; i < companies.length; i++) {
+        const c = companies[i] as { id: string; name: string; clickup_folder_id: string };
+        setSyncProgress({ current: i + 1, total: companies.length, currentFolder: c.name });
+        try {
+          const res = await syncOneFolderFn({ data: { folder_id: c.clickup_folder_id } });
+          totalTasks += res.tasks;
+          totalErrors += res.errors.length;
+          if (res.errors.length > 0) console.error(`[${c.name}] errors:`, res.errors);
+        } catch (e: any) {
+          console.error(`[${c.name}] sync threw:`, e?.message ?? e);
+          totalErrors += 1;
+        }
       }
+      toast.success(
+        `Synced ${totalTasks} tasks across ${companies.length} folders. ${totalErrors} errors.`,
+      );
     } catch (e: any) {
       toast.error(e?.message ?? "Full sync failed");
     } finally {
       setSyncingAll(false);
+      setSyncProgress(null);
     }
   };
 
@@ -221,6 +236,15 @@ function AdminConsole() {
                 </button>
               </div>
             </header>
+            {syncProgress && syncProgress.total > 0 ? (
+              <div
+                className="px-5 py-2 text-[12px] text-text-secondary border-b border-border"
+                style={{ background: "var(--muted)" }}
+              >
+                Syncing {syncProgress.current}/{syncProgress.total}
+                {syncProgress.currentFolder ? `: ${syncProgress.currentFolder}` : ""}
+              </div>
+            ) : null}
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="text-left text-[11px] uppercase tracking-wider text-text-secondary">

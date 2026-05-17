@@ -7,6 +7,7 @@ import {
   getConnectionStatus,
   syncList,
   syncAllFolders,
+  syncOneFolderImpl,
   getAppUserId,
   getAdminClickUpToken,
   VIVIA_RIU_DEFAULT_LIST_ID,
@@ -167,35 +168,51 @@ export const createApproval = createServerFn({ method: "POST" })
       });
     if (insertErr) throw new Error(insertErr.message);
 
+    console.log("[createApproval] approvals row inserted for task", data.task_id);
+
     const adminToken = await getAdminClickUpToken();
     if (!adminToken) {
-      return { ok: true, statusUpdated: false };
+      console.error("[createApproval] NO ADMIN TOKEN — ClickUp push skipped");
+      return { ok: true, statusUpdated: false, reason: "no_admin_token" as const };
     }
+    console.log("[createApproval] admin token resolved, length:", adminToken.length);
 
     const newStatus = data.action === "approved" ? "complete" : "in progress";
-    const statusRes = await fetch(
-      `https://api.clickup.com/api/v2/task/${encodeURIComponent(data.task_id)}`,
-      {
-        method: "PUT",
-        headers: {
-          Authorization: adminToken,
-          "Content-Type": "application/json",
+    console.log("[createApproval] PUT task status:", data.task_id, "→", newStatus);
+
+    let statusUpdated = false;
+    try {
+      const statusRes = await fetch(
+        `https://api.clickup.com/api/v2/task/${encodeURIComponent(data.task_id)}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: adminToken,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status: newStatus }),
         },
-        body: JSON.stringify({ status: newStatus }),
-      },
-    );
-    if (!statusRes.ok) {
-      const text = await statusRes.text();
-      console.error("[createApproval] ClickUp status update failed:", text);
-      return { ok: true, statusUpdated: false };
+      );
+      console.log("[createApproval] PUT status response:", statusRes.status);
+      if (!statusRes.ok) {
+        const text = await statusRes.text();
+        console.error(
+          "[createApproval] ClickUp status update FAILED:",
+          statusRes.status,
+          text.slice(0, 300),
+        );
+      } else {
+        statusUpdated = true;
+        console.log("[createApproval] ClickUp status updated successfully");
+      }
+    } catch (e: any) {
+      console.error("[createApproval] PUT request threw:", e?.message ?? e);
     }
 
     if (data.action === "changes_requested" && data.note) {
       try {
-        await fetch(
-          `https://api.clickup.com/api/v2/task/${encodeURIComponent(
-            data.task_id,
-          )}/comment`,
+        const commentRes = await fetch(
+          `https://api.clickup.com/api/v2/task/${encodeURIComponent(data.task_id)}/comment`,
           {
             method: "POST",
             headers: {
@@ -207,8 +224,9 @@ export const createApproval = createServerFn({ method: "POST" })
             }),
           },
         );
-      } catch (e) {
-        console.error("[createApproval] ClickUp comment post failed:", e);
+        console.log("[createApproval] POST comment response:", commentRes.status);
+      } catch (e: any) {
+        console.error("[createApproval] comment request threw:", e?.message ?? e);
       }
     }
 
@@ -217,7 +235,48 @@ export const createApproval = createServerFn({ method: "POST" })
       .update({ status: newStatus, last_synced_at: new Date().toISOString() })
       .eq("task_id", data.task_id);
 
-    return { ok: true, statusUpdated: true, status: newStatus };
+    return { ok: true, statusUpdated, status: newStatus };
+  });
+
+// Admin-gated: sync a single folder's lists. Designed to complete in <30s
+// (one folder ≈ 12 lists × 20 tasks) so the client can loop folder-by-folder
+// without hitting the Cloudflare Worker request timeout.
+export const syncOneFolder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ folder_id: z.string().min(1).max(64) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: appUser } = await context.supabase
+      .from("users")
+      .select("role")
+      .eq("auth_user_id", context.userId)
+      .maybeSingle();
+    if (appUser?.role !== "admin") {
+      throw new Error("Only admins can sync");
+    }
+    return syncOneFolderImpl(context.supabase, context.userId, data.folder_id);
+  });
+
+// Admin-gated: list active companies with a ClickUp folder, used to drive
+// the per-folder client loop in Console.
+export const listActiveCompanies = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: appUser } = await context.supabase
+      .from("users")
+      .select("role")
+      .eq("auth_user_id", context.userId)
+      .maybeSingle();
+    if (appUser?.role !== "admin") throw new Error("Forbidden");
+    const { data: companies, error } = await supabaseAdmin
+      .from("companies")
+      .select("id, name, clickup_folder_id")
+      .eq("active", true)
+      .not("clickup_folder_id", "is", null)
+      .order("name");
+    if (error) throw new Error(error.message);
+    return { companies: companies ?? [] };
   });
 
 // ----- Messaging -----
