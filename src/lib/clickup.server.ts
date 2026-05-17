@@ -314,3 +314,69 @@ export async function syncAllFolders(
 
   return { folders: folderCount, lists: listCount, tasks: taskCount, errors };
 }
+
+// Sync a single folder's lists. Used by the client-driven sync-all loop so
+// each HTTP request stays well under the Cloudflare Worker ~30s timeout.
+export async function syncOneFolderImpl(
+  supabase: any,
+  adminAuthUserId: string,
+  folderId: string,
+): Promise<{
+  folder_id: string;
+  lists: number;
+  tasks: number;
+  errors: Array<{ list?: string; error: string }>;
+}> {
+  const adminToken = await getAdminClickUpToken();
+  if (!adminToken) {
+    return {
+      folder_id: folderId,
+      lists: 0,
+      tasks: 0,
+      errors: [{ error: "Admin has not connected ClickUp yet." }],
+    };
+  }
+  const auth = { Authorization: adminToken };
+  const errors: Array<{ list?: string; error: string }> = [];
+
+  let lists: Array<{ id: string; name: string }> = [];
+  try {
+    const r = await fetch(
+      `https://api.clickup.com/api/v2/folder/${encodeURIComponent(folderId)}/list`,
+      { headers: auth },
+    );
+    if (!r.ok) {
+      const text = await r.text();
+      return {
+        folder_id: folderId,
+        lists: 0,
+        tasks: 0,
+        errors: [
+          { error: `Folder list fetch failed (${r.status}): ${text.slice(0, 200)}` },
+        ],
+      };
+    }
+    const j = (await r.json()) as { lists?: Array<{ id: string; name: string }> };
+    lists = j.lists ?? [];
+  } catch (e: any) {
+    return {
+      folder_id: folderId,
+      lists: 0,
+      tasks: 0,
+      errors: [{ error: String(e?.message ?? e) }],
+    };
+  }
+
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  let taskCount = 0;
+  for (const l of lists) {
+    try {
+      const res = await syncList(adminAuthUserId, supabase, l.id);
+      taskCount += res?.count ?? 0;
+    } catch (e: any) {
+      errors.push({ list: l.id, error: String(e?.message ?? e) });
+    }
+    await sleep(150);
+  }
+  return { folder_id: folderId, lists: lists.length, tasks: taskCount, errors };
+}
