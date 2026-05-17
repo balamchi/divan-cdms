@@ -5,7 +5,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   syncClickUpList,
-  syncAllClickUpFolders,
+  syncOneFolder,
+  listActiveCompanies,
   getClickUpConnection,
   getClickUpAuthorizeUrl,
 } from "@/lib/clickup.functions";
