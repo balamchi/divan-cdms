@@ -239,6 +239,7 @@ function PortalDashboard() {
                     variant="client"
                     onApprove={onApprove}
                     onRequestChanges={onRequestChanges}
+                    showApprovalButtons={true}
                   />
                 ))}
               </div>
