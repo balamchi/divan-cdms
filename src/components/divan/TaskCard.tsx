@@ -31,12 +31,15 @@ export function TaskCard({
   onRequestChanges,
   active,
   timer,
+  showApprovalButtons = false,
 }: TaskCardProps) {
   const cover =
     task.cover_url ||
     (task.attachments && task.attachments.length > 0 ? task.attachments[0]?.url : undefined);
 
   const isReview = task.status === "Client Review";
+  const showPhase3Buttons = showApprovalButtons && task.status === "in progress";
+  const showCompletedPill = showApprovalButtons && task.status === "complete";
 
   return (
     <div
