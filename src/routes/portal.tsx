@@ -21,6 +21,7 @@ import { MessageThread } from "@/components/divan/MessageThread";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { useRequireAuth } from "@/lib/require-auth";
+import { normalizeStatus } from "@/lib/utils";
 import {
   COMPANIES,
   TASKS,
@@ -91,7 +92,9 @@ function PortalDashboard() {
     };
   }, [effectiveCompanyId, company.id, fetchPortalTasks]);
 
-  const awaiting = tasks.filter((t) => t.status === "Client Review");
+  const awaiting = tasks.filter(
+    (t) => t.status === "Client Review" || normalizeStatus(t.status) === "in_progress",
+  );
   const scheduledStatuses = new Set(["Approved", "complete", "to do", "in progress"]);
   const weekFromNow = Date.now() + 7 * 86400000;
   const scheduled = tasks.filter((t) => {
@@ -239,6 +242,7 @@ function PortalDashboard() {
                     variant="client"
                     onApprove={onApprove}
                     onRequestChanges={onRequestChanges}
+                    showApprovalButtons={true}
                   />
                 ))}
               </div>

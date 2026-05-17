@@ -5,6 +5,17 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// Normalizes raw ClickUp statuses (which vary per list) into 3 buckets used
+// across portal UI: "todo", "in_progress", "approved_or_done".
+export type NormalizedStatus = "todo" | "in_progress" | "approved_or_done";
+
+export function normalizeStatus(raw: string | null | undefined): NormalizedStatus {
+  const s = (raw || "").toLowerCase().trim();
+  if (s === "approved" || s === "complete" || s === "completed") return "approved_or_done";
+  if (s === "in progress") return "in_progress";
+  return "todo";
+}
+
 // Anonymity rule (Phase 3): clients never see individual team-member names.
 // For team / admin viewers, the real ClickUp assignees are returned.
 export interface AssigneeChip {
