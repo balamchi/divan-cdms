@@ -77,4 +77,31 @@ export default {
       return brandedErrorResponse();
     }
   },
+
+  // Cloudflare scheduled handler — wired to wrangler.jsonc cron "*/15 * * * *".
+  // Runs the full multi-folder ClickUp sync using the admin user's token.
+  async scheduled(_event: unknown, _env: unknown, _ctx: unknown) {
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { syncAllFolders } = await import("@/lib/clickup.server");
+
+      const { data: adminUser } = await supabaseAdmin
+        .from("users")
+        .select("auth_user_id")
+        .eq("role", "admin")
+        .not("auth_user_id", "is", null)
+        .limit(1)
+        .maybeSingle();
+
+      if (!adminUser?.auth_user_id) {
+        console.error("[cron] No admin with auth_user_id found. Skipping sync.");
+        return;
+      }
+
+      const result = await syncAllFolders(supabaseAdmin, adminUser.auth_user_id);
+      console.log("[cron] sync complete:", JSON.stringify(result));
+    } catch (e) {
+      console.error("[cron] sync failed:", e);
+    }
+  },
 };
