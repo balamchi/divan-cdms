@@ -1,4 +1,4 @@
-import { FileText } from "lucide-react";
+import { FileText, Check } from "lucide-react";
 import type { Task } from "@/lib/mock-data";
 
 const fmt = (iso: string) =>
@@ -18,6 +18,10 @@ interface TaskCardProps {
   onRequestChanges?: (id: string) => void;
   active?: boolean;
   timer?: string;
+  // Phase 3 opt-in: render Approve / Request changes buttons when status
+  // is "in progress" (task is in team's hands, ready for client review).
+  // Renders a green "Approved" pill when status is already "complete".
+  showApprovalButtons?: boolean;
 }
 
 export function TaskCard({
