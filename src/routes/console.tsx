@@ -236,6 +236,15 @@ function AdminConsole() {
                 </button>
               </div>
             </header>
+            {syncProgress && syncProgress.total > 0 ? (
+              <div
+                className="px-5 py-2 text-[12px] text-text-secondary border-b border-border"
+                style={{ background: "var(--muted)" }}
+              >
+                Syncing {syncProgress.current}/{syncProgress.total}
+                {syncProgress.currentFolder ? `: ${syncProgress.currentFolder}` : ""}
+              </div>
+            ) : null}
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="text-left text-[11px] uppercase tracking-wider text-text-secondary">
