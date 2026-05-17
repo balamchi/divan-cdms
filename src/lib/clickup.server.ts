@@ -149,6 +149,7 @@ export async function syncList(authUserId: string, supabase: any, listId: string
     const row = {
       task_id: detail.id,
       list_id: detail.list?.id ?? listId,
+      list_name: detail.list?.name ?? null,
       folder_id: detail.folder?.id ?? null,
       company_id: detail.folder?.id ? companyByFolder.get(detail.folder.id) ?? null : null,
       name: detail.name ?? null,
