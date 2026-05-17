@@ -79,6 +79,30 @@ function AdminConsole() {
     }
   };
 
+  const runSyncAll = async () => {
+    setSyncingAll(true);
+    try {
+      const r = (await syncAll({})) as {
+        folders: number;
+        lists: number;
+        tasks: number;
+        errors: Array<{ folder: string; list?: string; error: string }>;
+      };
+      toast.success(
+        `Synced ${r.tasks} task${r.tasks === 1 ? "" : "s"} across ${r.folders} folder${
+          r.folders === 1 ? "" : "s"
+        }. ${r.errors.length} error${r.errors.length === 1 ? "" : "s"}.`,
+      );
+      if (r.errors.length > 0) {
+        console.error("[syncAll] errors:", r.errors);
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Full sync failed");
+    } finally {
+      setSyncingAll(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--background)" }}>
       <TopHeader role="admin" userName="Shahab" initials="SB" unread={5} />
