@@ -40,7 +40,9 @@ function AdminConsole() {
   useRequireAuth();
   const activeRetainers = COMPANIES.filter(() => true).length;
   const [syncing, setSyncing] = useState(false);
+  const [syncingAll, setSyncingAll] = useState(false);
   const sync = useServerFn(syncClickUpList);
+  const syncAll = useServerFn(syncAllClickUpFolders);
   const fetchConn = useServerFn(getClickUpConnection);
   const fetchAuthorizeUrl = useServerFn(getClickUpAuthorizeUrl);
   const { session } = useAuth();
