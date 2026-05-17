@@ -15,7 +15,10 @@ import { MetricCard } from "@/components/divan/MetricCard";
 import { TaskCard } from "@/components/divan/TaskCard";
 import { AppFooter } from "@/components/divan/AppFooter";
 import { useServerFn } from "@tanstack/react-start";
-import { getPortalTasks } from "@/lib/clickup.functions";
+import { getPortalTasks, createApproval } from "@/lib/clickup.functions";
+import { RequestChangesModal } from "@/components/divan/RequestChangesModal";
+import { MessageThread } from "@/components/divan/MessageThread";
+import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { useRequireAuth } from "@/lib/require-auth";
 import {
@@ -101,10 +104,30 @@ function PortalDashboard() {
     .sort((a, b) => +new Date(a.publishDate) - +new Date(b.publishDate))
     .slice(0, 4);
 
-  const onApprove = (id: string) =>
-    setTasks((cur) => cur.map((t) => (t.id === id ? { ...t, status: "Approved" } : t)));
-  const onRequestChanges = (id: string) =>
+  const approve = useServerFn(createApproval);
+  const [pendingChanges, setPendingChanges] = useState<string | null>(null);
+
+  const onApprove = async (id: string) => {
+    setTasks((cur) => cur.map((t) => (t.id === id ? { ...t, status: "complete" } : t)));
+    try {
+      await approve({ data: { task_id: id, action: "approved" } });
+      toast.success("Approved");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Approve failed");
+    }
+  };
+  const onRequestChanges = (id: string) => setPendingChanges(id);
+  const submitChanges = async (note: string) => {
+    if (!pendingChanges) return;
+    const id = pendingChanges;
     setTasks((cur) => cur.map((t) => (t.id === id ? { ...t, status: "in progress" } : t)));
+    try {
+      await approve({ data: { task_id: id, action: "changes_requested", note } });
+      toast.success("Sent to the team");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not send");
+    }
+  };
 
   const navItems: NavItem[] = [
     { icon: Home, label: "Dashboard", route: "/portal" },
@@ -258,9 +281,26 @@ function PortalDashboard() {
               </a>
             </section>
           </div>
+
+          {/* Messages with the Divan team */}
+          <section className="mt-10">
+            <h2 className="text-[14px] font-medium mb-3">Messages</h2>
+            <MessageThread
+              companyId={effectiveCompanyId}
+              currentUserRole="client"
+              teamNameOverride="The Divan Team"
+            />
+          </section>
+
           <AppFooter />
         </main>
       </div>
+
+      <RequestChangesModal
+        open={pendingChanges !== null}
+        onClose={() => setPendingChanges(null)}
+        onSubmit={submitChanges}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { FileText } from "lucide-react";
+import { FileText, Check } from "lucide-react";
 import type { Task } from "@/lib/mock-data";
 
 const fmt = (iso: string) =>
@@ -18,6 +18,10 @@ interface TaskCardProps {
   onRequestChanges?: (id: string) => void;
   active?: boolean;
   timer?: string;
+  // Phase 3 opt-in: render Approve / Request changes buttons when status
+  // is "in progress" (task is in team's hands, ready for client review).
+  // Renders a green "Approved" pill when status is already "complete".
+  showApprovalButtons?: boolean;
 }
 
 export function TaskCard({
@@ -27,12 +31,15 @@ export function TaskCard({
   onRequestChanges,
   active,
   timer,
+  showApprovalButtons = false,
 }: TaskCardProps) {
   const cover =
     task.cover_url ||
     (task.attachments && task.attachments.length > 0 ? task.attachments[0]?.url : undefined);
 
   const isReview = task.status === "Client Review";
+  const showPhase3Buttons = showApprovalButtons && task.status === "in progress";
+  const showCompletedPill = showApprovalButtons && task.status === "complete";
 
   return (
     <div
@@ -97,7 +104,47 @@ export function TaskCard({
           {fmt(task.publishDate)}
         </span>
 
-        {variant === "client" && isReview ? (
+        {showCompletedPill ? (
+          <span
+            className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full text-[12px] font-medium"
+            style={{
+              background: "var(--status-approved-bg)",
+              color: "var(--status-approved-fg)",
+            }}
+          >
+            <Check className="h-3 w-3" strokeWidth={2.2} />
+            Approved
+          </span>
+        ) : showPhase3Buttons ? (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onApprove?.(task.id);
+              }}
+              className="h-8 px-3 rounded-full text-[13px] font-medium transition-opacity hover:opacity-90"
+              style={{ background: "var(--foreground)", color: "var(--background)" }}
+            >
+              Approve
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRequestChanges?.(task.id);
+              }}
+              className="h-8 px-3 rounded-full text-[13px] font-medium transition-colors"
+              style={{
+                background: "var(--background)",
+                color: "var(--foreground)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              Request changes
+            </button>
+          </div>
+        ) : variant === "client" && isReview ? (
           <div className="flex items-center gap-2">
             <button
               type="button"

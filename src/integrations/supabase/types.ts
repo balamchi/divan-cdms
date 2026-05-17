@@ -67,6 +67,7 @@ export type Database = {
           kind: string | null
           last_synced_at: string
           list_id: string | null
+          list_name: string | null
           name: string | null
           publish_date: string | null
           status: string | null
@@ -84,6 +85,7 @@ export type Database = {
           kind?: string | null
           last_synced_at?: string
           list_id?: string | null
+          list_name?: string | null
           name?: string | null
           publish_date?: string | null
           status?: string | null
@@ -101,6 +103,7 @@ export type Database = {
           kind?: string | null
           last_synced_at?: string
           list_id?: string | null
+          list_name?: string | null
           name?: string | null
           publish_date?: string | null
           status?: string | null

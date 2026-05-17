@@ -149,6 +149,7 @@ export async function syncList(authUserId: string, supabase: any, listId: string
     const row = {
       task_id: detail.id,
       list_id: detail.list?.id ?? listId,
+      list_name: detail.list?.name ?? null,
       folder_id: detail.folder?.id ?? null,
       company_id: detail.folder?.id ? companyByFolder.get(detail.folder.id) ?? null : null,
       name: detail.name ?? null,
@@ -191,4 +192,125 @@ export async function syncList(authUserId: string, supabase: any, listId: string
   console.log("[syncList] returning count=", rows.length);
 
   return { success: true, count: rows.length, synced: rows.length, list_id: listId };
+}
+
+// Returns the admin's decrypted ClickUp OAuth token, or null when no admin
+// has connected yet. Used by cron sync (no user session) and approvals
+// (which push status changes from the team's ClickUp account).
+export async function getAdminClickUpToken(): Promise<string | null> {
+  const { data: adminUser } = await supabaseAdmin
+    .from("users")
+    .select("id")
+    .eq("role", "admin")
+    .limit(1)
+    .maybeSingle();
+  if (!adminUser) {
+    console.error("[getAdminClickUpToken] No admin user found in users table");
+    return null;
+  }
+  const { data: tok } = await supabaseAdmin
+    .from("clickup_tokens")
+    .select("access_token")
+    .eq("user_id", adminUser.id)
+    .maybeSingle();
+  if (!tok) {
+    console.error(
+      "[getAdminClickUpToken] Admin has not connected ClickUp yet. Cron sync and approval status updates will skip until Shahab clicks 'Connect ClickUp' in the Console.",
+    );
+    return null;
+  }
+  try {
+    return decryptToken(tok.access_token);
+  } catch (e) {
+    console.error("[getAdminClickUpToken] Failed to decrypt admin token:", e);
+    return null;
+  }
+}
+
+// Iterates every active company with a clickup_folder_id, discovers each
+// folder's lists via the ClickUp API, and runs syncList for each list.
+// Errors on a single list are logged and swallowed so one bad list never
+// aborts the whole sync.
+export async function syncAllFolders(
+  supabase: any,
+  adminAuthUserId: string,
+): Promise<{
+  folders: number;
+  lists: number;
+  tasks: number;
+  errors: Array<{ folder: string; list?: string; error: string }>;
+}> {
+  const { data: companies, error: cErr } = await supabaseAdmin
+    .from("companies")
+    .select("id, name, clickup_folder_id")
+    .eq("active", true)
+    .not("clickup_folder_id", "is", null);
+  if (cErr) throw new Error(cErr.message);
+
+  // Resolve the admin's ClickUp token once for folder/list discovery.
+  const adminToken = await getAdminClickUpToken();
+  if (!adminToken) {
+    return {
+      folders: 0,
+      lists: 0,
+      tasks: 0,
+      errors: [
+        {
+          folder: "(none)",
+          error: "Admin has not connected ClickUp yet. Connect it in the Console.",
+        },
+      ],
+    };
+  }
+  const auth = { Authorization: adminToken };
+
+  const errors: Array<{ folder: string; list?: string; error: string }> = [];
+  let folderCount = 0;
+  let listCount = 0;
+  let taskCount = 0;
+
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+  for (const c of companies ?? []) {
+    const folderId = c.clickup_folder_id as string;
+    folderCount += 1;
+    let lists: Array<{ id: string; name: string }> = [];
+    try {
+      const r = await fetch(
+        `https://api.clickup.com/api/v2/folder/${encodeURIComponent(folderId)}/list`,
+        { headers: auth },
+      );
+      if (!r.ok) {
+        const text = await r.text();
+        errors.push({
+          folder: folderId,
+          error: `Folder list fetch failed (${r.status}): ${text.slice(0, 200)}`,
+        });
+        continue;
+      }
+      const j = (await r.json()) as { lists?: Array<{ id: string; name: string }> };
+      lists = j.lists ?? [];
+    } catch (e: any) {
+      errors.push({ folder: folderId, error: String(e?.message ?? e) });
+      continue;
+    }
+
+    for (const l of lists) {
+      listCount += 1;
+      try {
+        const res = await syncList(adminAuthUserId, supabase, l.id);
+        taskCount += res?.count ?? 0;
+      } catch (e: any) {
+        errors.push({
+          folder: folderId,
+          list: l.id,
+          error: String(e?.message ?? e),
+        });
+      }
+      // ClickUp limits to 100 req/min per token; 200ms is a safe pad.
+      await sleep(200);
+    }
+  }
+
+  return { folders: folderCount, lists: listCount, tasks: taskCount, errors };
 }

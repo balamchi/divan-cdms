@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   syncClickUpList,
+  syncAllClickUpFolders,
   getClickUpConnection,
   getClickUpAuthorizeUrl,
 } from "@/lib/clickup.functions";
@@ -39,7 +40,9 @@ function AdminConsole() {
   useRequireAuth();
   const activeRetainers = COMPANIES.filter(() => true).length;
   const [syncing, setSyncing] = useState(false);
+  const [syncingAll, setSyncingAll] = useState(false);
   const sync = useServerFn(syncClickUpList);
+  const syncAll = useServerFn(syncAllClickUpFolders);
   const fetchConn = useServerFn(getClickUpConnection);
   const fetchAuthorizeUrl = useServerFn(getClickUpAuthorizeUrl);
   const { session } = useAuth();
@@ -73,6 +76,30 @@ function AdminConsole() {
       toast.error(e?.message ?? "Sync failed");
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const runSyncAll = async () => {
+    setSyncingAll(true);
+    try {
+      const r = (await syncAll({})) as {
+        folders: number;
+        lists: number;
+        tasks: number;
+        errors: Array<{ folder: string; list?: string; error: string }>;
+      };
+      toast.success(
+        `Synced ${r.tasks} task${r.tasks === 1 ? "" : "s"} across ${r.folders} folder${
+          r.folders === 1 ? "" : "s"
+        }. ${r.errors.length} error${r.errors.length === 1 ? "" : "s"}.`,
+      );
+      if (r.errors.length > 0) {
+        console.error("[syncAll] errors:", r.errors);
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Full sync failed");
+    } finally {
+      setSyncingAll(false);
     }
   };
 
@@ -160,15 +187,28 @@ function AdminConsole() {
                 <button
                   type="button"
                   onClick={runSync}
-                  disabled={syncing}
-                  className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-medium text-white disabled:opacity-60"
-                  style={{ background: "var(--magenta)" }}
+                  disabled={syncing || syncingAll}
+                  className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-medium border disabled:opacity-60"
+                  style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
                 >
                   <RefreshCw
                     className={`h-3 w-3 ${syncing ? "animate-spin" : ""}`}
                     strokeWidth={1.8}
                   />
-                  {syncing ? "Syncing…" : "Sync Vivia Riu now"}
+                  {syncing ? "Syncing…" : "Sync Vivia only"}
+                </button>
+                <button
+                  type="button"
+                  onClick={runSyncAll}
+                  disabled={syncing || syncingAll}
+                  className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-medium text-white disabled:opacity-60"
+                  style={{ background: "var(--magenta)" }}
+                >
+                  <RefreshCw
+                    className={`h-3 w-3 ${syncingAll ? "animate-spin" : ""}`}
+                    strokeWidth={1.8}
+                  />
+                  {syncingAll ? "Syncing all…" : "Sync all workspaces"}
                 </button>
               </div>
             </header>
