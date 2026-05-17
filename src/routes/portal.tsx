@@ -113,8 +113,12 @@ function PortalDashboard() {
   const onApprove = async (id: string) => {
     setTasks((cur) => cur.map((t) => (t.id === id ? { ...t, status: "complete" } : t)));
     try {
-      await approve({ data: { task_id: id, action: "approved" } });
-      toast.success("Approved");
+      const result = await approve({ data: { task_id: id, action: "approved" } });
+      if ((result as any).statusUpdated) {
+        toast.success("Approved · Synced to ClickUp");
+      } else {
+        toast.warning("Approved locally · ClickUp sync pending");
+      }
     } catch (e: any) {
       toast.error(e?.message ?? "Approve failed");
     }
@@ -125,8 +129,12 @@ function PortalDashboard() {
     const id = pendingChanges;
     setTasks((cur) => cur.map((t) => (t.id === id ? { ...t, status: "in progress" } : t)));
     try {
-      await approve({ data: { task_id: id, action: "changes_requested", note } });
-      toast.success("Sent to the team");
+      const result = await approve({ data: { task_id: id, action: "changes_requested", note } });
+      if ((result as any).statusUpdated) {
+        toast.success("Sent to the team · Comment posted to ClickUp");
+      } else {
+        toast.warning("Sent to the team · ClickUp sync pending");
+      }
     } catch (e: any) {
       toast.error(e?.message ?? "Could not send");
     }
