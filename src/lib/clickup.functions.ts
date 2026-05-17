@@ -53,12 +53,25 @@ export const getPortalTasks = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     try {
       if (data.company_id !== VIVIA_COMPANY_UUID) return { tasks: [] };
+      // Lists clients are allowed to see in the portal. Anything else stays
+      // internal to the team.
+      const VISIBLE_TO_CLIENT_LIST_PATTERNS = [
+        "📅 C-",
+        "📱 S-",
+        "👤 Lead Tracking",
+        "📊 Reports",
+        "🤝 Strategy and Meetings",
+      ];
+      const orClause = VISIBLE_TO_CLIENT_LIST_PATTERNS
+        .map((p) => `list_name.ilike.${p}%`)
+        .join(",");
       const { data: rows, error } = await supabaseAdmin
         .from("clickup_tasks_cache")
         .select(
           "task_id,name,subject,description,kind,status,publish_date,assignees,company_id,list_name",
         )
-        .eq("company_id", data.company_id);
+        .eq("company_id", data.company_id)
+        .or(orClause);
       if (error) {
         console.error("getPortalTasks error", error);
         return { tasks: [] };
