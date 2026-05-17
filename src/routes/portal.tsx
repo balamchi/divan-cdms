@@ -21,6 +21,7 @@ import { MessageThread } from "@/components/divan/MessageThread";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { useRequireAuth } from "@/lib/require-auth";
+import { normalizeStatus } from "@/lib/utils";
 import {
   COMPANIES,
   TASKS,
