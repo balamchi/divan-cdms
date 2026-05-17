@@ -281,9 +281,26 @@ function PortalDashboard() {
               </a>
             </section>
           </div>
+
+          {/* Messages with the Divan team */}
+          <section className="mt-10">
+            <h2 className="text-[14px] font-medium mb-3">Messages</h2>
+            <MessageThread
+              companyId={effectiveCompanyId}
+              currentUserRole="client"
+              teamNameOverride="The Divan Team"
+            />
+          </section>
+
           <AppFooter />
         </main>
       </div>
+
+      <RequestChangesModal
+        open={pendingChanges !== null}
+        onClose={() => setPendingChanges(null)}
+        onSubmit={submitChanges}
+      />
     </div>
   );
 }
