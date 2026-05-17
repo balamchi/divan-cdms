@@ -187,15 +187,28 @@ function AdminConsole() {
                 <button
                   type="button"
                   onClick={runSync}
-                  disabled={syncing}
-                  className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-medium text-white disabled:opacity-60"
-                  style={{ background: "var(--magenta)" }}
+                  disabled={syncing || syncingAll}
+                  className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-medium border disabled:opacity-60"
+                  style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
                 >
                   <RefreshCw
                     className={`h-3 w-3 ${syncing ? "animate-spin" : ""}`}
                     strokeWidth={1.8}
                   />
-                  {syncing ? "Syncing…" : "Sync Vivia Riu now"}
+                  {syncing ? "Syncing…" : "Sync Vivia only"}
+                </button>
+                <button
+                  type="button"
+                  onClick={runSyncAll}
+                  disabled={syncing || syncingAll}
+                  className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-medium text-white disabled:opacity-60"
+                  style={{ background: "var(--magenta)" }}
+                >
+                  <RefreshCw
+                    className={`h-3 w-3 ${syncingAll ? "animate-spin" : ""}`}
+                    strokeWidth={1.8}
+                  />
+                  {syncingAll ? "Syncing all…" : "Sync all workspaces"}
                 </button>
               </div>
             </header>
