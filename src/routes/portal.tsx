@@ -111,7 +111,7 @@ function PortalDashboard() {
   const [pendingChanges, setPendingChanges] = useState<string | null>(null);
 
   const onApprove = async (id: string) => {
-    setTasks((cur) => cur.map((t) => (t.id === id ? { ...t, status: "complete" } : t)));
+    setTasks((cur) => cur.map((t) => (t.id === id ? { ...t, status: "approved" } : t)));
     try {
       const result = await approve({ data: { task_id: id, action: "approved" } });
       if ((result as any).statusUpdated) {

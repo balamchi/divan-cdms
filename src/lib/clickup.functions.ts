@@ -177,7 +177,7 @@ export const createApproval = createServerFn({ method: "POST" })
     }
     console.log("[createApproval] admin token resolved, length:", adminToken.length);
 
-    const newStatus = data.action === "approved" ? "complete" : "in progress";
+    const newStatus = data.action === "approved" ? "approved" : "in progress";
     console.log("[createApproval] PUT task status:", data.task_id, "→", newStatus);
 
     let statusUpdated = false;
