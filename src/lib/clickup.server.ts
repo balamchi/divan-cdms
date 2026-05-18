@@ -139,40 +139,28 @@ export async function syncList(authUserId: string, supabase: any, listId: string
 
   const rows: any[] = [];
   for (const t of tasks) {
-    console.log("[syncList] task", t.id, t.name, "folder=", t?.folder?.id);
-    const detailRes = await fetch(
-      `https://api.clickup.com/api/v2/task/${encodeURIComponent(t.id)}`,
-      { headers: auth },
-    );
-    const detail = detailRes.ok ? await detailRes.json() : t;
-    const fields: ClickUpCustomField[] = detail.custom_fields ?? [];
+    const fields: ClickUpCustomField[] = t.custom_fields ?? [];
     const row = {
-      task_id: detail.id,
-      list_id: detail.list?.id ?? listId,
-      list_name: detail.list?.name ?? null,
-      folder_id: detail.folder?.id ?? null,
-      company_id: detail.folder?.id ? companyByFolder.get(detail.folder.id) ?? null : null,
-      name: detail.name ?? null,
-      subject: readCustomField(fields, "Subject") ?? detail.name ?? null,
+      task_id: t.id,
+      list_id: t.list?.id ?? listId,
+      list_name: t.list?.name ?? null,
+      folder_id: t.folder?.id ?? null,
+      company_id: t.folder?.id ? companyByFolder.get(t.folder.id) ?? null : null,
+      name: t.name ?? null,
+      subject: readCustomField(fields, "Subject") ?? t.name ?? null,
       kind: readCustomField(fields, "Kind"),
       publish_date: toIso(readCustomField(fields, "Publish Date")),
-      status: detail.status?.status ?? null,
-      assignees: detail.assignees ?? [],
-      due_date: toIso(detail.due_date),
-      description: detail.description ?? null,
-      attachments: detail.attachments ?? [],
-      url: detail.url ?? null,
+      status: t.status?.status ?? null,
+      assignees: t.assignees ?? [],
+      due_date: toIso(t.due_date),
+      description: t.description ?? null,
+      attachments: t.attachments ?? [],
+      url: t.url ?? null,
       last_synced_at: new Date().toISOString(),
     };
-    console.log("[syncList] row to upsert:", {
-      task_id: row.task_id,
-      folder_id: row.folder_id,
-      company_id: row.company_id,
-      name: row.name,
-      status: row.status,
-    });
     rows.push(row);
   }
+  console.log("[syncList] processed rows:", rows.length);
 
   console.log("[syncList] about to upsert rows.length=", rows.length);
   if (rows.length > 0) {
