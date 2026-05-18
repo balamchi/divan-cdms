@@ -1,19 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Sparkles, AlertCircle, RefreshCw, Link2, Check } from "lucide-react";
+import { Sparkles, RefreshCw, Link2, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
-  syncClickUpList,
   syncOneFolder,
   listActiveCompanies,
   getClickUpConnection,
   getClickUpAuthorizeUrl,
+  getRetainerMetrics,
 } from "@/lib/clickup.functions";
 import { TopHeader } from "@/components/divan/TopHeader";
 import { MetricCard } from "@/components/divan/MetricCard";
 import { AppFooter } from "@/components/divan/AppFooter";
-import { COMPANIES } from "@/lib/mock-data";
 import { useAuth } from "@/lib/auth";
 import { useRequireAuth } from "@/lib/require-auth";
 
@@ -24,36 +23,62 @@ export const Route = createFileRoute("/console")({
       { title: "Founder console · Divan CDMS" },
       {
         name: "description",
-        content:
-          "Retainer health, lead pipeline, and AI command bar for Divan Group leadership.",
+        content: "Retainer health and workspace sync for Divan Group leadership.",
       },
     ],
   }),
 });
 
-const LEAD_STAGES = [
-  { name: "New", count: 4, latest: "Lumière Skin Studio" },
-  { name: "Discovery", count: 3, latest: "Aria Luxe Realty" },
-  { name: "Proposal sent", count: 2, latest: "Mahdi Hospitality Group" },
-];
+interface RetainerRow {
+  id: string;
+  name: string;
+  monthly_retainer_cents: number;
+  postsCount: number;
+  lastSync: string | null;
+}
+
+const healthColor = (lastSync: string | null): string => {
+  if (!lastSync) return "var(--danger)";
+  const age = Date.now() - new Date(lastSync).getTime();
+  if (age < 24 * 60 * 60 * 1000) return "var(--success)";
+  if (age < 7 * 24 * 60 * 60 * 1000) return "var(--warning)";
+  return "var(--danger)";
+};
+
+const fmtUsd = (cents: number) => {
+  if (!cents) return "—";
+  return `$${Math.round(cents / 100).toLocaleString()}`;
+};
 
 function AdminConsole() {
   useRequireAuth();
-  const activeRetainers = COMPANIES.filter(() => true).length;
-  const [syncing, setSyncing] = useState(false);
   const [syncingAll, setSyncingAll] = useState(false);
   const [syncProgress, setSyncProgress] = useState<{
     current: number;
     total: number;
     currentFolder: string;
   } | null>(null);
-  const sync = useServerFn(syncClickUpList);
   const syncOneFolderFn = useServerFn(syncOneFolder);
   const listCompaniesFn = useServerFn(listActiveCompanies);
   const fetchConn = useServerFn(getClickUpConnection);
   const fetchAuthorizeUrl = useServerFn(getClickUpAuthorizeUrl);
-  const { session } = useAuth();
+  const fetchMetrics = useServerFn(getRetainerMetrics);
+  const { session, user } = useAuth();
   const [cuConnected, setCuConnected] = useState<boolean | null>(null);
+  const [metrics, setMetrics] = useState<{
+    activeRetainers: number;
+    mrrCents: number;
+    companies: RetainerRow[];
+  }>({ activeRetainers: 0, mrrCents: 0, companies: [] });
+
+  const loadMetrics = async () => {
+    try {
+      const res = await fetchMetrics({});
+      setMetrics(res as any);
+    } catch (e) {
+      console.error("retainer metrics failed", e);
+    }
+  };
 
   useEffect(() => {
     if (!session) {
@@ -61,6 +86,8 @@ function AdminConsole() {
       return;
     }
     fetchConn({}).then((r) => setCuConnected(r.connected)).catch(() => setCuConnected(false));
+    void loadMetrics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, fetchConn]);
 
   const connectClickUp = async () => {
@@ -70,19 +97,6 @@ function AdminConsole() {
       window.location.href = url;
     } catch (e: any) {
       toast.error(e?.message ?? "Could not start ClickUp connection");
-    }
-  };
-
-  const runSync = async () => {
-    setSyncing(true);
-    try {
-      const r = await sync({ data: {} });
-      const n = (r as any)?.count ?? (r as any)?.synced ?? 0;
-      toast.success(`Synced ${n} task${n === 1 ? "" : "s"} from Vivia Riu`);
-    } catch (e: any) {
-      toast.error(e?.message ?? "Sync failed");
-    } finally {
-      setSyncing(false);
     }
   };
 
@@ -110,6 +124,7 @@ function AdminConsole() {
       toast.success(
         `Synced ${totalTasks} tasks across ${companies.length} folders. ${totalErrors} errors.`,
       );
+      await loadMetrics();
     } catch (e: any) {
       toast.error(e?.message ?? "Full sync failed");
     } finally {
@@ -118,20 +133,24 @@ function AdminConsole() {
     }
   };
 
+  const firstName = user?.full_name?.split(" ")[0] ?? "there";
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--background)" }}>
-      <TopHeader role="admin" userName="Shahab" initials="SB" unread={5} />
+      <TopHeader role="admin" userName={firstName} initials="SB" unread={0} />
 
-      {/* AI command bar */}
+      {/* AI command bar — disabled placeholder */}
       <div
         className="sticky top-14 z-30 h-12 px-5 md:px-10 flex items-center gap-3 border-b border-white/10"
-        style={{ background: "var(--charcoal)", color: "white" }}
+        style={{ background: "var(--charcoal)", color: "white", opacity: 0.5 }}
+        title="AI features coming soon"
       >
         <Sparkles className="h-4 w-4" style={{ color: "var(--magenta)" }} strokeWidth={1.5} />
         <input
           type="text"
-          placeholder="Ask CDMS · draft Par May report, summarize Vivia week, find leads I haven't replied to..."
-          className="flex-1 bg-transparent outline-none text-[13px] placeholder:text-white/40"
+          readOnly
+          placeholder="Coming in Phase 4 · AI command bar"
+          className="flex-1 bg-transparent outline-none text-[13px] placeholder:text-white/40 cursor-not-allowed"
         />
         <kbd className="hidden md:inline-flex items-center h-6 px-1.5 rounded bg-white/10 text-[10px] text-white/70">
           ⌘K
@@ -139,31 +158,14 @@ function AdminConsole() {
       </div>
 
       <main className="flex-1 px-5 md:px-10 py-8 max-w-[1280px] w-full">
-        {/* Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
           <MetricCard
             label="Monthly recurring"
-            value="$18,400"
-            delta="+$2.1k vs April"
-            deltaTone="success"
+            value={fmtUsd(metrics.mrrCents)}
           />
-          <MetricCard
-            label="AR outstanding"
-            value="$4,250"
-            delta="2 invoices > 30 days"
-            deltaTone="warning"
-            accentColor="var(--warning)"
-          />
-          <MetricCard label="Active retainers" value={activeRetainers} />
-          <MetricCard
-            label="Team utilization"
-            value="78%"
-            delta="target 75%"
-            deltaTone="neutral"
-          />
+          <MetricCard label="Active retainers" value={metrics.activeRetainers} />
         </div>
 
-        {/* Fallback Connect ClickUp button (always visible to admin) */}
         <div className="flex justify-end mb-4">
           {cuConnected ? (
             <span
@@ -200,31 +202,17 @@ function AdminConsole() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {/* Retainer health */}
           <section className="lg:col-span-3 rounded-xl border border-border bg-card overflow-hidden">
             <header className="px-5 py-4 border-b border-border flex items-center justify-between gap-3">
               <h2 className="text-[14px] font-medium">All retainers · health</h2>
               <div className="flex items-center gap-3">
                 <span className="text-[11px] text-text-secondary">
-                  {COMPANIES.length} active
+                  {metrics.activeRetainers} active
                 </span>
                 <button
                   type="button"
-                  onClick={runSync}
-                  disabled={syncing || syncingAll}
-                  className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-medium border disabled:opacity-60"
-                  style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
-                >
-                  <RefreshCw
-                    className={`h-3 w-3 ${syncing ? "animate-spin" : ""}`}
-                    strokeWidth={1.8}
-                  />
-                  {syncing ? "Syncing…" : "Sync Vivia only"}
-                </button>
-                <button
-                  type="button"
                   onClick={runSyncAll}
-                  disabled={syncing || syncingAll}
+                  disabled={syncingAll}
                   className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-medium text-white disabled:opacity-60"
                   style={{ background: "var(--magenta)" }}
                 >
@@ -251,91 +239,45 @@ function AdminConsole() {
                   <th className="px-5 py-2 font-normal">Client</th>
                   <th className="px-3 py-2 font-normal">MRR</th>
                   <th className="px-3 py-2 font-normal">Posts</th>
-                  <th className="px-3 py-2 font-normal">Reach</th>
                   <th className="px-5 py-2 font-normal">Health</th>
                 </tr>
               </thead>
               <tbody>
-                {COMPANIES.map((c) => {
-                  const ratio = c.postsDone / c.postsPlanned;
-                  const health =
-                    ratio > 0.8
-                      ? "var(--success)"
-                      : ratio > 0.5
-                        ? "var(--warning)"
-                        : "var(--danger)";
-                  return (
+                {metrics.companies.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-5 py-6 text-text-secondary text-center">
+                      No active retainers yet.
+                    </td>
+                  </tr>
+                ) : (
+                  metrics.companies.map((c) => (
                     <tr key={c.id} className="border-t border-border">
                       <td className="px-5 py-3 text-text-primary">{c.name}</td>
                       <td className="px-3 py-3 text-text-primary">
-                        ${c.mrr.toLocaleString()}
+                        {fmtUsd(c.monthly_retainer_cents)}
                       </td>
-                      <td className="px-3 py-3 text-text-secondary">
-                        {c.postsDone}/{c.postsPlanned}
-                      </td>
-                      <td
-                        className="px-3 py-3 font-medium"
-                        style={{
-                          color:
-                            c.reachDelta >= 0 ? "var(--success)" : "var(--danger)",
-                        }}
-                      >
-                        {c.reachDelta >= 0 ? "+" : ""}
-                        {c.reachDelta}%
-                      </td>
+                      <td className="px-3 py-3 text-text-secondary">{c.postsCount}</td>
                       <td className="px-5 py-3">
                         <span
                           className="inline-block h-2.5 w-2.5 rounded-full"
-                          style={{ background: health }}
+                          style={{ background: healthColor(c.lastSync) }}
                           aria-hidden
+                          title={c.lastSync ? `Last sync ${new Date(c.lastSync).toLocaleString()}` : "Never synced"}
                         />
                       </td>
                     </tr>
-                  );
-                })}
+                  ))
+                )}
               </tbody>
             </table>
           </section>
 
-          {/* Lead pipeline + alert */}
           <section className="lg:col-span-2 space-y-3">
-            <h2 className="text-[14px] font-medium">Lead pipeline</h2>
-            {LEAD_STAGES.map((s) => (
-              <div
-                key={s.name}
-                className="rounded-xl border border-border bg-card p-4 flex items-center justify-between"
-              >
-                <div className="leading-tight">
-                  <div className="text-[12px] text-text-secondary">{s.name}</div>
-                  <div className="text-[13px] text-text-primary mt-0.5">
-                    Latest: <span className="font-medium">{s.latest}</span>
-                  </div>
-                </div>
-                <div
-                  className="h-9 w-9 rounded-md grid place-items-center text-[14px] font-medium"
-                  style={{
-                    background: "var(--magenta-soft)",
-                    color: "var(--magenta)",
-                  }}
-                >
-                  {s.count}
-                </div>
-              </div>
-            ))}
-
-            <div
-              className="rounded-xl p-4 flex gap-3"
-              style={{ background: "var(--magenta-soft)" }}
-            >
-              <AlertCircle
-                className="h-5 w-5 shrink-0"
-                style={{ color: "var(--magenta)" }}
-                strokeWidth={1.5}
-              />
-              <div className="text-[12px] text-text-primary leading-relaxed">
-                <span className="font-medium">CRA exam · May 26</span> · 14 days remaining.
-                Package ready. Action plan in Operations / Finance.
-              </div>
+            <div className="rounded-2xl p-6 border border-border" style={{ background: "var(--card)" }}>
+              <p className="text-[14px] font-medium text-text-primary mb-1">Lead pipeline</p>
+              <p className="text-[12px] text-text-secondary">
+                Connect your CRM space to enable. Coming soon.
+              </p>
             </div>
           </section>
         </div>
