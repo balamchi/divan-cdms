@@ -356,9 +356,14 @@ export async function syncOneFolderImpl(
     };
   }
 
+  const listsToSync = listFilter ? lists.filter((l) => listFilter(l.name)) : lists;
+  console.log(
+    `[syncOneFolderImpl] folder=${folderId} total lists=${lists.length} after filter=${listsToSync.length}`,
+  );
+
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
   let taskCount = 0;
-  for (const l of lists) {
+  for (const l of listsToSync) {
     try {
       const res = await syncList(adminAuthUserId, supabase, l.id);
       taskCount += res?.count ?? 0;
@@ -367,5 +372,5 @@ export async function syncOneFolderImpl(
     }
     await sleep(150);
   }
-  return { folder_id: folderId, lists: lists.length, tasks: taskCount, errors };
+  return { folder_id: folderId, lists: listsToSync.length, tasks: taskCount, errors };
 }
