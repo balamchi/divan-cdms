@@ -47,7 +47,7 @@ function WorkspaceMyDay() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetchMyDay({});
+        const res = await fetchMyDay();
         if (cancelled) return;
         setTasks((res.tasks ?? []) as MyDayTask[]);
         setLinked(res.linked);
