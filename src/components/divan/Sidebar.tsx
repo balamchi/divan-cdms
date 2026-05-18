@@ -26,33 +26,48 @@ export function Sidebar({ items, footer }: SidebarProps) {
     >
       <nav className="flex-1 py-6 px-3">
         {items.map((item) => {
-          const active = location.pathname === item.route;
+          const [path, hash] = item.route.split("#");
+          const active = location.pathname === path && (!hash || location.hash === `#${hash}`);
           const Icon = item.icon;
+          const className = "flex items-center gap-2.5 rounded-md transition-colors hover:text-foreground";
+          const style = {
+            padding: "8px 12px",
+            color: active ? "var(--foreground)" : "var(--text-secondary)",
+            fontSize: "14px",
+            fontWeight: active ? 500 : 400,
+          } as const;
+          const inner = (
+            <>
+              <Icon size={16} strokeWidth={1.6} />
+              <span className="flex-1 truncate">{item.label}</span>
+              {item.badgeCount ? (
+                <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+                  {item.badgeCount}
+                </span>
+              ) : null}
+            </>
+          );
+          if (hash) {
+            return (
+              <Link
+                key={`${item.route}-${item.label}`}
+                to={path}
+                hash={hash}
+                className={className}
+                style={style}
+              >
+                {inner}
+              </Link>
+            );
+          }
           return (
             <Link
               key={`${item.route}-${item.label}`}
               to={item.route}
-              className={cn(
-                "flex items-center gap-2.5 rounded-md transition-colors",
-                "hover:text-foreground",
-              )}
-              style={{
-                padding: "8px 12px",
-                color: active ? "var(--foreground)" : "var(--text-secondary)",
-                fontSize: "14px",
-                fontWeight: active ? 500 : 400,
-              }}
+              className={className}
+              style={style}
             >
-              <Icon size={16} strokeWidth={1.6} />
-              <span className="flex-1 truncate">{item.label}</span>
-              {item.badgeCount ? (
-                <span
-                  className="text-[11px]"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  {item.badgeCount}
-                </span>
-              ) : null}
+              {inner}
             </Link>
           );
         })}
