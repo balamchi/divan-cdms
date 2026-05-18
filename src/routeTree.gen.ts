@@ -14,6 +14,7 @@ import { Route as PortalRouteImport } from './routes/portal'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ConsoleRouteImport } from './routes/console'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PortalCalendarRouteImport } from './routes/portal.calendar'
 import { Route as ClickupCallbackRouteImport } from './routes/clickup.callback'
 
 const WorkspaceRoute = WorkspaceRouteImport.update({
@@ -41,6 +42,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PortalCalendarRoute = PortalCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => PortalRoute,
+} as any)
 const ClickupCallbackRoute = ClickupCallbackRouteImport.update({
   id: '/clickup/callback',
   path: '/clickup/callback',
@@ -51,26 +57,29 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/console': typeof ConsoleRoute
   '/login': typeof LoginRoute
-  '/portal': typeof PortalRoute
+  '/portal': typeof PortalRouteWithChildren
   '/workspace': typeof WorkspaceRoute
   '/clickup/callback': typeof ClickupCallbackRoute
+  '/portal/calendar': typeof PortalCalendarRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/console': typeof ConsoleRoute
   '/login': typeof LoginRoute
-  '/portal': typeof PortalRoute
+  '/portal': typeof PortalRouteWithChildren
   '/workspace': typeof WorkspaceRoute
   '/clickup/callback': typeof ClickupCallbackRoute
+  '/portal/calendar': typeof PortalCalendarRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/console': typeof ConsoleRoute
   '/login': typeof LoginRoute
-  '/portal': typeof PortalRoute
+  '/portal': typeof PortalRouteWithChildren
   '/workspace': typeof WorkspaceRoute
   '/clickup/callback': typeof ClickupCallbackRoute
+  '/portal/calendar': typeof PortalCalendarRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,6 +90,7 @@ export interface FileRouteTypes {
     | '/portal'
     | '/workspace'
     | '/clickup/callback'
+    | '/portal/calendar'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -89,6 +99,7 @@ export interface FileRouteTypes {
     | '/portal'
     | '/workspace'
     | '/clickup/callback'
+    | '/portal/calendar'
   id:
     | '__root__'
     | '/'
@@ -97,13 +108,14 @@ export interface FileRouteTypes {
     | '/portal'
     | '/workspace'
     | '/clickup/callback'
+    | '/portal/calendar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConsoleRoute: typeof ConsoleRoute
   LoginRoute: typeof LoginRoute
-  PortalRoute: typeof PortalRoute
+  PortalRoute: typeof PortalRouteWithChildren
   WorkspaceRoute: typeof WorkspaceRoute
   ClickupCallbackRoute: typeof ClickupCallbackRoute
 }
@@ -145,6 +157,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/portal/calendar': {
+      id: '/portal/calendar'
+      path: '/calendar'
+      fullPath: '/portal/calendar'
+      preLoaderRoute: typeof PortalCalendarRouteImport
+      parentRoute: typeof PortalRoute
+    }
     '/clickup/callback': {
       id: '/clickup/callback'
       path: '/clickup/callback'
@@ -155,11 +174,22 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface PortalRouteChildren {
+  PortalCalendarRoute: typeof PortalCalendarRoute
+}
+
+const PortalRouteChildren: PortalRouteChildren = {
+  PortalCalendarRoute: PortalCalendarRoute,
+}
+
+const PortalRouteWithChildren =
+  PortalRoute._addFileChildren(PortalRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConsoleRoute: ConsoleRoute,
   LoginRoute: LoginRoute,
-  PortalRoute: PortalRoute,
+  PortalRoute: PortalRouteWithChildren,
   WorkspaceRoute: WorkspaceRoute,
   ClickupCallbackRoute: ClickupCallbackRoute,
 }

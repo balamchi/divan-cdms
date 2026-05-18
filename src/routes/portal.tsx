@@ -1,14 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import {
-  Home,
-  CheckCircle2,
-  Calendar,
-  BarChart3,
-  Folder,
-  MessageCircle,
-  Camera,
-} from "lucide-react";
+import { Home, CheckCircle2, Calendar, MessageCircle } from "lucide-react";
 import { TopHeader } from "@/components/divan/TopHeader";
 import { Sidebar, type NavItem } from "@/components/divan/Sidebar";
 import { MetricCard } from "@/components/divan/MetricCard";
@@ -41,7 +33,7 @@ export const Route = createFileRoute("/portal")({
       {
         name: "description",
         content:
-          "Approve content, review your monthly report, and message your Divan team — all in one place.",
+          "Approve content and message your Divan team — all in one place.",
       },
     ],
   }),
@@ -49,7 +41,7 @@ export const Route = createFileRoute("/portal")({
 
 function PortalDashboard() {
   useRequireAuth();
-  const company = COMPANIES[0]; // Vivia Riu
+  const company = COMPANIES[0];
   const { user } = useAuth();
   const companyTasks = useMemo(
     () => TASKS.filter((t) => t.companyId === company.id),
@@ -58,8 +50,8 @@ function PortalDashboard() {
   const [tasks, setTasks] = useState<Task[]>(companyTasks);
   const fetchPortalTasks = useServerFn(getPortalTasks);
 
-  // Effective company id: real auth user's company, or Vivia for demo "As Vivi".
   const effectiveCompanyId = user?.company_id ?? VIVIA_COMPANY_UUID;
+  const displayName = user?.full_name?.split(" ")[0] ?? "there";
 
   useEffect(() => {
     if (effectiveCompanyId !== VIVIA_COMPANY_UUID) return;
@@ -95,10 +87,8 @@ function PortalDashboard() {
   const awaiting = tasks.filter(
     (t) => t.status === "Client Review" || normalizeStatus(t.status) === "in_progress",
   );
-  const scheduledStatuses = new Set(["Approved", "complete", "to do", "in progress"]);
   const weekFromNow = Date.now() + 7 * 86400000;
   const scheduled = tasks.filter((t) => {
-    if (!scheduledStatuses.has(t.status)) return false;
     const ts = +new Date(t.publishDate);
     return ts >= Date.now() && ts <= weekFromNow;
   });
@@ -142,17 +132,14 @@ function PortalDashboard() {
 
   const navItems: NavItem[] = [
     { icon: Home, label: "Dashboard", route: "/portal" },
-    { icon: CheckCircle2, label: "Approvals", route: "/portal", badgeCount: awaiting.length },
-    { icon: Calendar, label: "Content calendar", route: "/portal" },
-    { icon: BarChart3, label: "Monthly reports", route: "/portal" },
-    { icon: Folder, label: "File library", route: "/portal" },
-    { icon: MessageCircle, label: "Messages", route: "/portal", badgeCount: 2 },
-    { icon: Camera, label: "Shoot bookings", route: "/portal" },
+    { icon: CheckCircle2, label: "Approvals", route: "/portal#approvals", badgeCount: awaiting.length },
+    { icon: Calendar, label: "Content calendar", route: "/portal/calendar" },
+    { icon: MessageCircle, label: "Messages", route: "/portal#messages-section" },
   ];
 
   return (
     <div className="min-h-screen flex flex-col">
-      <TopHeader role="client" userName="Vivi Riu" initials="VR" unread={awaiting.length} />
+      <TopHeader role="client" userName={displayName} initials="VR" unread={awaiting.length} />
       <div className="flex flex-1">
         <Sidebar
           role="client"
@@ -184,29 +171,22 @@ function PortalDashboard() {
 
         <main className="flex-1 px-5 md:px-10 py-8 max-w-[1200px]">
           <header className="mb-6">
-            <h1 className="text-[18px] font-medium">Welcome back, Vivi</h1>
+            <h1 className="text-[18px] font-medium">Welcome back, {displayName}</h1>
             <p className="text-[12px] text-text-secondary mt-0.5">
-              {awaiting.length} {awaiting.length === 1 ? "item needs" : "items need"} your review · Next shoot: May 18
+              {awaiting.length} {awaiting.length === 1 ? "item needs" : "items need"} your review
             </p>
           </header>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
             <MetricCard
               label="Awaiting approval"
               value={awaiting.length}
               accentColor="var(--magenta)"
             />
             <MetricCard label="Scheduled this week" value={scheduled.length} />
-            <MetricCard
-              label="Reach this month"
-              value="+34%"
-              delta="vs April"
-              deltaTone="success"
-              accentColor="var(--success)"
-            />
           </div>
 
-          <section className="mb-10">
+          <section id="approvals" className="mb-10 scroll-mt-20">
             <div className="flex items-baseline justify-between mb-3">
               <h2 className="text-[14px] font-medium">Needs your approval</h2>
               <span className="text-[11px] text-text-secondary">
@@ -257,9 +237,11 @@ function PortalDashboard() {
             )}
           </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <section className="rounded-xl border border-border bg-card p-5">
-              <h3 className="text-[13px] font-medium mb-3">Upcoming this week</h3>
+          <section className="rounded-xl border border-border bg-card p-5">
+            <h3 className="text-[13px] font-medium mb-3">Upcoming this week</h3>
+            {upcoming.length === 0 ? (
+              <p className="text-[12px] text-text-secondary">Nothing scheduled.</p>
+            ) : (
               <ul className="divide-y divide-border">
                 {upcoming.map((t) => (
                   <li key={t.id} className="py-2.5 flex items-center justify-between gap-4">
@@ -276,27 +258,11 @@ function PortalDashboard() {
                   </li>
                 ))}
               </ul>
-            </section>
-            <section className="rounded-xl border border-border bg-card p-5">
-              <h3 className="text-[13px] font-medium mb-3">Latest report</h3>
-              <p className="text-[13px] text-text-primary mb-1">April 2026 · Performance</p>
-              <p className="text-[12px] text-text-secondary mb-4">
-                Reach grew 34% MoM with Story Plans driving the lift. Carousel saves up
-                21%. Booking inquiries up 12.
-              </p>
-              <a
-                href="#"
-                className="text-[12px] font-medium"
-                style={{ color: "var(--teal)" }}
-              >
-                View full report →
-              </a>
-            </section>
-          </div>
+            )}
+          </section>
 
-          {/* Messages with the Divan team — auth-only; getMessages requires a session */}
           {user ? (
-            <section className="mt-10">
+            <section id="messages-section" className="mt-10 scroll-mt-20">
               <h2 className="text-[14px] font-medium mb-3">Messages</h2>
               <MessageThread
                 companyId={effectiveCompanyId}
