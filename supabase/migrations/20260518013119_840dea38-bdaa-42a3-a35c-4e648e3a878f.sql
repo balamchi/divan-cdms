@@ -1,0 +1,1 @@
+ALTER TABLE public.companies ADD COLUMN IF NOT EXISTS monthly_retainer_cents BIGINT NOT NULL DEFAULT 0;

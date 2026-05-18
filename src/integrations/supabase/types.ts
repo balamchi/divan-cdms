@@ -161,6 +161,7 @@ export type Database = {
           id: string
           logo_url: string | null
           monthly_content_count: number | null
+          monthly_retainer_cents: number
           name: string
         }
         Insert: {
@@ -173,6 +174,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           monthly_content_count?: number | null
+          monthly_retainer_cents?: number
           name: string
         }
         Update: {
@@ -185,6 +187,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           monthly_content_count?: number | null
+          monthly_retainer_cents?: number
           name?: string
         }
         Relationships: []
