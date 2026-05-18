@@ -255,7 +255,16 @@ export const syncOneFolder = createServerFn({ method: "POST" })
     if (appUser?.role !== "admin") {
       throw new Error("Only admins can sync");
     }
-    return syncOneFolderImpl(context.supabase, context.userId, data.folder_id);
+    const CLIENT_VISIBLE_LIST_PREFIXES = [
+      "📅 C-",
+      "📱 S-",
+      "👤 Lead Tracking",
+      "📊 Reports",
+      "🤝 Strategy and Meetings",
+    ];
+    const listFilter = (listName: string) =>
+      CLIENT_VISIBLE_LIST_PREFIXES.some((p) => listName.startsWith(p));
+    return syncOneFolderImpl(context.supabase, context.userId, data.folder_id, listFilter);
   });
 
 // Admin-gated: list active companies with a ClickUp folder, used to drive
