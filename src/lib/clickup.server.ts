@@ -309,6 +309,7 @@ export async function syncOneFolderImpl(
   supabase: any,
   adminAuthUserId: string,
   folderId: string,
+  listFilter?: (listName: string) => boolean,
 ): Promise<{
   folder_id: string;
   lists: number;
