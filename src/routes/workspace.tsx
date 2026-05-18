@@ -37,13 +37,20 @@ interface MyDayTask {
 
 function WorkspaceMyDay() {
   useRequireAuth();
-  const { user } = useAuth();
+  const { user, session, loading: authLoading } = useAuth();
   const fetchMyDay = useServerFn(getMyDayTasks);
   const [tasks, setTasks] = useState<MyDayTask[]>([]);
   const [linked, setLinked] = useState(true);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
+    if (!session) {
+      // demo / unauthenticated — no server call, treat as unlinked
+      setLinked(false);
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {
@@ -53,6 +60,7 @@ function WorkspaceMyDay() {
         setLinked(res.linked);
       } catch (e) {
         console.error("my-day load failed", e);
+        if (!cancelled) setLinked(false);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -60,7 +68,7 @@ function WorkspaceMyDay() {
     return () => {
       cancelled = true;
     };
-  }, [fetchMyDay]);
+  }, [fetchMyDay, authLoading, session]);
 
   const firstName = user?.full_name?.split(" ")[0] ?? "there";
 
