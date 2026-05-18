@@ -6,7 +6,8 @@ export type TaskStatus =
   | "in progress"
   | "Client Review"
   | "Approved"
-  | "complete";
+  | "complete"
+  | "approved";
 
 export type TaskKind =
   | "Publish Plan"

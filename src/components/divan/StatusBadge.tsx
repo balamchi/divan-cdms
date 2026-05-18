@@ -22,6 +22,11 @@ const MAP: Record<TaskStatus, { bg: string; fg: string; label: string }> = {
     fg: "var(--status-complete-fg)",
     label: "Complete",
   },
+  approved: {
+    bg: "var(--status-approved-bg)",
+    fg: "var(--status-approved-fg)",
+    label: "Approved",
+  },
 };
 
 export function StatusBadge({ status }: { status: TaskStatus }) {
