@@ -378,3 +378,94 @@ export const listMessageCompanies = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return { companies: companies ?? [] };
   });
+
+// Returns today's open tasks assigned to the signed-in team/admin user.
+// Requires the matching `users.clickup_user_id` to be populated.
+export const getMyDayTasks = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: appUser } = await context.supabase
+      .from("users")
+      .select("id, clickup_user_id, full_name")
+      .eq("auth_user_id", context.userId)
+      .maybeSingle();
+    if (!appUser?.clickup_user_id) {
+      return { tasks: [], userName: appUser?.full_name ?? null, linked: false };
+    }
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    const { data: rows } = await supabaseAdmin
+      .from("clickup_tasks_cache")
+      .select(
+        "task_id, name, subject, status, due_date, publish_date, company_id, list_name, url, assignees",
+      )
+      .lte("due_date", end.toISOString())
+      .order("due_date", { ascending: true });
+    const closed = new Set(["closed", "complete", "completed", "approved"]);
+    const my = (rows ?? []).filter((t: any) => {
+      if (closed.has(String(t.status ?? "").toLowerCase())) return false;
+      const a = t.assignees;
+      if (!Array.isArray(a)) return false;
+      return a.some((x: any) => String(x?.id) === String(appUser.clickup_user_id));
+    });
+    // Attach company name
+    const ids = Array.from(new Set(my.map((t: any) => t.company_id).filter(Boolean)));
+    const nameById = new Map<string, string>();
+    if (ids.length > 0) {
+      const { data: comps } = await supabaseAdmin
+        .from("companies")
+        .select("id, name")
+        .in("id", ids as string[]);
+      for (const c of comps ?? []) nameById.set(c.id as string, c.name as string);
+    }
+    return {
+      tasks: my.map((t: any) => ({ ...t, company_name: nameById.get(t.company_id) ?? null })),
+      userName: appUser.full_name ?? null,
+      linked: true,
+    };
+  });
+
+// Admin-only: retainer metrics + per-company post counts and sync recency.
+export const getRetainerMetrics = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: appUser } = await context.supabase
+      .from("users")
+      .select("role")
+      .eq("auth_user_id", context.userId)
+      .maybeSingle();
+    if (appUser?.role !== "admin") throw new Error("Forbidden");
+
+    const { data: companies } = await supabaseAdmin
+      .from("companies")
+      .select("id, name, monthly_retainer_cents, active, clickup_folder_id")
+      .eq("active", true)
+      .order("name");
+
+    const { data: posts } = await supabaseAdmin
+      .from("clickup_tasks_cache")
+      .select("company_id, last_synced_at, list_name");
+
+    const stats = new Map<string, { count: number; lastSync: string | null }>();
+    for (const p of posts ?? []) {
+      const ln = String((p as any).list_name ?? "");
+      if (!(ln.startsWith("📅 C-") || ln.startsWith("📱 S-"))) continue;
+      const cid = (p as any).company_id;
+      if (!cid) continue;
+      const cur = stats.get(cid) ?? { count: 0, lastSync: null };
+      cur.count++;
+      const ls = (p as any).last_synced_at as string | null;
+      if (ls && (!cur.lastSync || ls > cur.lastSync)) cur.lastSync = ls;
+      stats.set(cid, cur);
+    }
+
+    const enriched = (companies ?? []).map((c: any) => ({
+      id: c.id as string,
+      name: c.name as string,
+      monthly_retainer_cents: Number(c.monthly_retainer_cents) || 0,
+      postsCount: stats.get(c.id)?.count ?? 0,
+      lastSync: stats.get(c.id)?.lastSync ?? null,
+    }));
+    const mrrCents = enriched.reduce((s, c) => s + c.monthly_retainer_cents, 0);
+    return { activeRetainers: enriched.length, mrrCents, companies: enriched };
+  });
